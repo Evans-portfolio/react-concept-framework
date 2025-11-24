@@ -1,0 +1,17 @@
+{
+  "name": "framework-example",
+  "version": "1.0.0",
+  "description": "Example application using the framework",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["framework", "example"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@framework/core": "file:../framework"
+  }
+}

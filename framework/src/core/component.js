@@ -1,0 +1,1 @@
+// Component base class/factory

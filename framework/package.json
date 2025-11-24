@@ -1,0 +1,14 @@
+{
+  "name": "@framework/core",
+  "version": "1.0.0",
+  "description": "Core framework package",
+  "main": "dist/index.js",
+  "module": "src/core/index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["framework"],
+  "author": "",
+  "license": "ISC"
+}
