@@ -19,8 +19,13 @@ export class Router {
     this.rootElement = document.querySelector(rootSelector);
     if (!this.rootElement) throw new Error('Router root element not found');
 
-    const navigate = () => this.resolve(location.pathname + location.search);
-    window.addEventListener('popstate', navigate);
+    // Use hash-based routing for better compatibility with static servers
+    const navigate = () => {
+      const hash = location.hash.slice(1) || '/'; // Remove # and default to /
+      this.resolve(hash);
+    };
+    
+    window.addEventListener('hashchange', navigate);
     window.addEventListener('click', (e) => {
       if (e.target.matches('[data-link]')) {
         e.preventDefault();
@@ -33,8 +38,8 @@ export class Router {
   }
 
   navigate(path) {
-    history.pushState(null, '', path);
-    this.resolve(location.pathname + location.search);
+    location.hash = path;
+    // resolve will be called by hashchange event
   }
 
   resolve(pathname) {

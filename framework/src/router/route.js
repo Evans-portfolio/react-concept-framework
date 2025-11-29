@@ -2,15 +2,24 @@
 // framework/src/router/route.js
 export class Route {
   constructor(path, component, props = {}) {
-    this.path = path.replace(/\/$/, '') || '/';
+    this.path = path;
     this.component = component;
     this.props = props;
     this.keys = [];
 
+    // Handle wildcard route
+    if (path === '*') {
+      this.regex = /.*/; // Match anything
+      return;
+    }
+
+    // Normalize path
+    const normalizedPath = path.replace(/\/$/, '') || '/';
+
     // Extract param names like /users/:id
     this.regex = new RegExp(
       '^' +
-      this.path
+      normalizedPath
         .replace(/:[^\/]+/g, (match) => {
           this.keys.push(match.slice(1));
           return '([^\\/]+)';

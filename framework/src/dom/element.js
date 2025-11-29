@@ -59,12 +59,14 @@ export function createElement(vnode) {
   setProps(element, vnode.props);
 
   // Append children
-  vnode.children.forEach(child => {
-    const childElement = createElement(child);
-    if (childElement) {
-      element.appendChild(childElement);
-    }
-  });
+  if (vnode.children) {
+    vnode.children.forEach(child => {
+      const childElement = createElement(child);
+      if (childElement) {
+        element.appendChild(childElement);
+      }
+    });
+  }
 
   return element;
 }
@@ -75,6 +77,7 @@ export function createElement(vnode) {
  * @param {Object} props - Properties to set
  */
 export function setProps(element, props) {
+  if (!props) return;
   Object.keys(props).forEach(key => {
     setProp(element, key, props[key]);
   });
@@ -89,6 +92,8 @@ export function setProps(element, props) {
 export function setProp(element, name, value) {
   if (name === 'className') {
     element.className = value;
+  } else if (name === 'class') {
+    element.className = value;
   } else if (name === 'style' && typeof value === 'object') {
     Object.assign(element.style, value);
   } else if (name.startsWith('on')) {
@@ -102,6 +107,9 @@ export function setProp(element, name, value) {
     } else if (value && typeof value === 'object') {
       value.current = element;
     }
+  } else if (name === 'checked' || name === 'value' || name === 'selected') {
+    // Special properties that need to be set as DOM properties, not attributes
+    element[name] = value;
   } else if (typeof value === 'boolean') {
     if (value) {
       element.setAttribute(name, '');

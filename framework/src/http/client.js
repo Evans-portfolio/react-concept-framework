@@ -15,9 +15,16 @@ export class HttpClient {
   }
 
   async request(method, url, data = null, options = {}) {
+    const headers = { ...DEFAULT_HEADERS };
+    
+    // Add ReqRes.in API key only for reqres.in requests
+    if (url.includes('reqres.in')) {
+      headers['x-api-key'] = 'reqres-free-v1';
+    }
+    
     const config = {
       method,
-      headers: { ...DEFAULT_HEADERS, ...options.headers },
+      headers: { ...headers, ...options.headers },
     };
 
     if (data) {
