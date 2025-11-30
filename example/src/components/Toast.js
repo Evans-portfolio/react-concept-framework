@@ -1,4 +1,5 @@
-import { Component } from '../../../framework/src/core/component.js';
+import { Component, h } from '../../../framework/src/core/index.js';
+import { on, off } from '../../../framework/src/events/index.js';
 
 /**
  * Toast notifications component
@@ -11,13 +12,22 @@ export class Toast extends Component {
     this.state = {
       notifications: [] // Array of {id, type, message}
     };
+    this._notificationHandler = null;
   }
 
-  componentDidMount() {
+  mounted() {
     // Listen for custom 'notification' events
-    this.on('notification', (event) => {
+    this._notificationHandler = (event) => {
       this.addNotification(event.detail);
-    });
+    };
+    on('notification', this._notificationHandler);
+  }
+
+  beforeDestroy() {
+    // Clean up event listener
+    if (this._notificationHandler) {
+      off('notification', this._notificationHandler);
+    }
   }
 
   addNotification({ type = 'info', message, duration = 3000 }) {
@@ -43,43 +53,25 @@ export class Toast extends Component {
   render() {
     const { notifications } = this.state;
 
-    return {
-      type: 'div',
-      props: { 
-        class: 'toast-container'
-      },
-      children: notifications.map(notif => ({
-        type: 'div',
-        props: {
+    return h('div', { className: 'toast-container' },
+      ...notifications.map(notif =>
+        h('div', {
           key: notif.id,
-          class: `toast toast-${notif.type}`,
-          onclick: () => this.removeNotification(notif.id)
+          className: `toast toast-${notif.type}`,
+          onClick: () => this.removeNotification(notif.id)
         },
-        children: [
-          {
-            type: 'span',
-            props: { class: 'toast-icon' },
-            children: [this.getIcon(notif.type)]
-          },
-          {
-            type: 'span',
-            props: { class: 'toast-message' },
-            children: [notif.message]
-          },
-          {
-            type: 'button',
-            props: {
-              class: 'toast-close',
-              onclick: (e) => {
-                e.stopPropagation();
-                this.removeNotification(notif.id);
-              }
-            },
-            children: ['×']
-          }
-        ]
-      }))
-    };
+          h('span', { className: 'toast-icon' }, this.getIcon(notif.type)),
+          h('span', { className: 'toast-message' }, notif.message),
+          h('button', {
+            className: 'toast-close',
+            onClick: (e) => {
+              e.stopPropagation();
+              this.removeNotification(notif.id);
+            }
+          }, '×')
+        )
+      )
+    );
   }
 
   getIcon(type) {
