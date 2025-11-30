@@ -2,6 +2,24 @@
 
 Components are the building blocks of your application. They encapsulate UI logic, state, and behavior.
 
+---
+
+**📚 Navigation:** [← Prev: Installation](./03-installation.md) | [Next: State Management →](./05-state-management.md)
+
+---
+
+## 📖 Table of Contents
+
+- [Component Class](#component-class)
+- [Component Lifecycle](#component-lifecycle)
+- [State Management](#state-management)
+- [Props](#props)
+- [Event Handling](#event-handling)
+- [Component Composition](#component-composition)
+- [Best Practices](#best-practices)
+
+---
+
 ## Component Class
 
 ### Basic Component
@@ -31,79 +49,136 @@ class Greeting extends Component {
 const greeting = new Greeting({ name: 'Alice' });
 ```
 
+**💡 Understanding Props:**
+
+Props (properties) are like function parameters:
+1. **Passed from parent** - Parent component controls the values
+2. **Read-only** - Cannot be modified inside the component
+3. **Can be any type** - strings, numbers, objects, functions, components
+
+**Example with different prop types:**
+```javascript
+// Example: User card component - demonstrates receiving props from parent
+class UserCard extends Component {
+  render() {
+    const { name, age, onDelete } = this.props; // Destructure props for easy access
+    
+    return h('div', { class: 'card' }, [
+      h('h3', {}, name),           // String prop
+      h('p', {}, `Age: ${age}`),   // Number prop
+      h('button', {                 // Function prop
+        onclick: () => onDelete(this.props.id)
+      }, 'Delete')
+    ]);
+  }
+}
+
+// Parent passes props:
+const card = new UserCard({
+  id: 1,
+  name: 'Alice',
+  age: 25,
+  onDelete: (id) => console.log('Delete user', id) // Parent controls delete logic
+});
+```
+
+> ⚠️ **Remember:** Never do `this.props.name = 'Bob'` - props are read-only!
+
 ### Component with State
 
 State is internal data that can change over time:
 
 ```javascript
+// Example: Toggle button - demonstrates internal state management
 class Toggle extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isOn: false
+      isOn: false  // Initial state - switch is OFF
     };
   }
 
   toggle() {
-    this.setState({ isOn: !this.state.isOn });
+    this.setState({ isOn: !this.state.isOn }); // Toggle state - triggers re-render
   }
 
   render() {
     const { isOn } = this.state;
     return h('div', {}, [
-      h('p', {}, `The switch is ${isOn ? 'ON' : 'OFF'}`),
+      h('p', {}, `The switch is ${isOn ? 'ON' : 'OFF'}`), // Display current state
       h('button', { 
-        onclick: () => this.toggle() 
+        onclick: () => this.toggle() // Call toggle method on click
       }, 'Toggle')
     ]);
   }
 }
 ```
 
+**💡 State vs Props:**
+
+| Feature | State | Props |
+|---------|-------|-------|
+| **Mutable** | ✅ Yes (via `setState`) | ❌ No (read-only) |
+| **Owned by** | Component itself | Parent component |
+| **Changes trigger** | Re-render | Re-render |
+| **Use for** | Internal component data | Configuration from parent |
+
+**Example:**
+```javascript
+// Props come from parent
+<UserCard name="Alice" age={25} />
+
+// State is internal
+this.state = { expanded: false }
+```
+
+> 📝 **Best practice:** Keep state as local as possible. Only lift state up when multiple components need to share it.
+
 ## Component Lifecycle
 
 ### Lifecycle Hooks
 
 ```javascript
+// Example: Complete lifecycle demonstration - shows execution order of all hooks
 class LifecycleDemo extends Component {
   constructor(props) {
     super(props);
-    console.log('1. Constructor called');
+    console.log('1. Constructor called'); // First - basic setup
   }
 
   created() {
-    console.log('2. Component created');
+    console.log('2. Component created'); // Second - after construction
     // Initialize data, setup non-reactive properties
   }
 
   beforeMount() {
-    console.log('3. Before mounting to DOM');
+    console.log('3. Before mounting to DOM'); // Third - before first render
     // Last chance to modify state before initial render
   }
 
   mounted() {
-    console.log('4. Component mounted to DOM');
+    console.log('4. Component mounted to DOM'); // Fourth - DOM is ready
     // Access DOM, fetch data, setup event listeners
-    this.loadData();
+    this.loadData(); // Safe to fetch data now
   }
 
   beforeUpdate(oldState, newState) {
-    console.log('5. Before state update');
+    console.log('5. Before state update'); // Before each re-render
     // React to state changes before re-render
   }
 
   updated(oldState, newState) {
-    console.log('6. After state update');
+    console.log('6. After state update'); // After each re-render
     // Perform DOM operations after update
   }
 
   beforeUnmount() {
-    console.log('7. Before unmounting');
+    console.log('7. Before unmounting'); // Before component removal
     // Cleanup: remove event listeners, cancel timers
   }
 
   unmounted() {
-    console.log('8. Component unmounted');
+    console.log('8. Component unmounted'); // After component removed
     // Final cleanup
   }
 
@@ -162,21 +237,22 @@ class UserProfile extends Component {
 **Cleanup:**
 
 ```javascript
+// Example: Timer with cleanup - demonstrates beforeUnmount() hook
 class Timer extends Component {
   constructor(props) {
     super(props);
     this.state = { seconds: 0 };
-    this.intervalId = null;
+    this.intervalId = null; // Store interval ID for cleanup
   }
 
   mounted() {
     this.intervalId = setInterval(() => {
-      this.setState({ seconds: this.state.seconds + 1 });
+      this.setState({ seconds: this.state.seconds + 1 }); // Increment every second
     }, 1000);
   }
 
   beforeUnmount() {
-    // Clean up interval
+    // Clean up interval - prevents memory leaks!
     if (this.intervalId) {
       clearInterval(this.intervalId);
     }
@@ -230,14 +306,15 @@ handleClick() {
 ### Reusable Button Component
 
 ```javascript
+// Example: Reusable button - demonstrates component composition and default props
 class Button extends Component {
   render() {
-    const { variant = 'primary', onClick, children } = this.props;
+    const { variant = 'primary', onClick, children } = this.props; // Default variant
     
     return h('button', {
-      class: `btn btn-${variant}`,
+      class: `btn btn-${variant}`, // Dynamic CSS class based on variant
       onclick: onClick
-    }, children);
+    }, children); // children = button content
   }
 }
 
@@ -251,34 +328,36 @@ h(Button, {
 ### Card Component with Slots
 
 ```javascript
+// Example: Card with slots - demonstrates children prop pattern
 class Card extends Component {
   render() {
     const { title, children } = this.props;
     
     return h('div', { class: 'card' }, [
-      title && h('div', { class: 'card-header' }, title),
-      h('div', { class: 'card-body' }, children)
+      title && h('div', { class: 'card-header' }, title), // Optional header
+      h('div', { class: 'card-body' }, children) // children = card content
     ]);
   }
 }
 
 // Usage
 h(Card, { title: 'My Card' }, [
-  h('p', {}, 'Card content goes here')
+  h('p', {}, 'Card content goes here') // This becomes children prop
 ])
 ```
 
 ### List Component
 
 ```javascript
+// Example: Generic list - demonstrates render prop pattern
 class List extends Component {
   render() {
     const { items, renderItem } = this.props;
     
     return h('ul', { class: 'list' },
       items.map((item, index) => 
-        h('li', { key: item.id || index }, 
-          renderItem(item, index)
+        h('li', { key: item.id || index }, // Always use keys for lists!
+          renderItem(item, index) // Parent controls how each item renders
         )
       )
     );
@@ -375,6 +454,7 @@ render() {
 ### Todo Component (Real Example)
 
 ```javascript
+// Example: Full todo app - demonstrates complete component with state, lifecycle, and events
 class HomePage extends Component {
   constructor(props) {
     super(props);
@@ -385,50 +465,50 @@ class HomePage extends Component {
   }
 
   mounted() {
-    // Load from localStorage
+    // Load from localStorage on mount
     const saved = localStorage.getItem('todos');
     if (saved) {
-      this.setState({ todos: JSON.parse(saved) });
+      this.setState({ todos: JSON.parse(saved) }); // Restore saved todos
     }
   }
 
   addTodo() {
-    if (!this.state.newTodo.trim()) return;
+    if (!this.state.newTodo.trim()) return; // Ignore empty todos
     
     const todos = [
       ...this.state.todos,
-      { id: Date.now(), text: this.state.newTodo, completed: false }
+      { id: Date.now(), text: this.state.newTodo, completed: false } // Create new todo
     ];
     
-    this.setState({ todos, newTodo: '' });
-    localStorage.setItem('todos', JSON.stringify(todos));
+    this.setState({ todos, newTodo: '' }); // Update state and clear input
+    localStorage.setItem('todos', JSON.stringify(todos)); // Persist to storage
   }
 
   toggleTodo(id) {
     const todos = this.state.todos.map(todo =>
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      todo.id === id ? { ...todo, completed: !todo.completed } : todo // Toggle specific todo
     );
     this.setState({ todos });
-    localStorage.setItem('todos', JSON.stringify(todos));
+    localStorage.setItem('todos', JSON.stringify(todos)); // Persist changes
   }
 
   render() {
     return h('div', { class: 'todo-app' }, [
       h('input', {
         value: this.state.newTodo,
-        oninput: (e) => this.setState({ newTodo: e.target.value }),
-        onkeypress: (e) => e.key === 'Enter' && this.addTodo()
+        oninput: (e) => this.setState({ newTodo: e.target.value }), // Update input state
+        onkeypress: (e) => e.key === 'Enter' && this.addTodo() // Add on Enter key
       }),
       h('ul', {},
         this.state.todos.map(todo =>
           h('li', { 
-            key: todo.id,
+            key: todo.id, // Unique key for efficient rendering
             class: todo.completed ? 'completed' : ''
           }, [
             h('input', {
               type: 'checkbox',
               checked: todo.completed,
-              onchange: () => this.toggleTodo(todo.id)
+              onchange: () => this.toggleTodo(todo.id) // Toggle on click
             }),
             h('span', {}, todo.text)
           ])
@@ -444,3 +524,9 @@ class HomePage extends Component {
 - [State Management](./05-state-management.md) - Global state stores
 - [Event Handling](./07-event-handling.md) - Working with events
 - [Best Practices](./10-best-practices.md) - Component patterns
+
+---
+
+**📚 Navigation:** [← Prev: Installation](./03-installation.md) | [Next: State Management →](./05-state-management.md)
+
+---

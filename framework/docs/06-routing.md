@@ -2,20 +2,39 @@
 
 Build single-page applications (SPAs) with client-side routing.
 
+---
+
+**📚 Navigation:** [← Prev: State Management](./05-state-management.md) | [Next: Event Handling →](./07-event-handling.md)
+
+---
+
+## 📖 Table of Contents
+
+- [Basic Setup](#basic-setup)
+- [Defining Routes](#defining-routes)
+- [Navigation](#navigation)
+- [Route Parameters](#route-parameters)
+- [Route Guards](#route-guards)
+- [Nested Routes](#nested-routes)
+- [Programmatic Navigation](#programmatic-navigation)
+
+---
+
 ## Basic Setup
 
 ### 1. Create Router Instance
 
 ```javascript
+// Example: Basic router setup - defines routes and starts the router
 import { router } from './framework/src/router/index.js';
 
-// Define routes
-router.on('/', HomePage);
-router.on('/about', AboutPage);
-router.on('/users/:id', UserDetailPage);
-router.on('*', NotFoundPage); // 404 fallback
+// Define routes - map URLs to components
+router.on('/', HomePage);              // Root path
+router.on('/about', AboutPage);        // Static route
+router.on('/users/:id', UserDetailPage); // Dynamic route with parameter
+router.on('*', NotFoundPage);          // 404 fallback - catches all unmatched routes
 
-// Start router
+// Start router - mounts to #app element and begins listening to URL changes
 router.start('#app');
 ```
 
@@ -28,6 +47,23 @@ http://localhost:8000/example/public/#/
 http://localhost:8000/example/public/#/about
 http://localhost:8000/example/public/#/users/123
 ```
+
+**💡 Hash vs History API:**
+
+| Feature | Hash (`#/about`) | History API (`/about`) |
+|---------|------------------|------------------------|
+| **Server config** | ✅ None needed | ❌ Requires rewrites |
+| **SEO** | ❌ Not ideal | ✅ Better |
+| **Deployment** | ✅ Works anywhere | ❌ Needs server support |
+| **URL appearance** | ❌ Has `#` | ✅ Clean URLs |
+
+**When to use hash routing:**
+- Static hosting (GitHub Pages, Netlify)
+- No server configuration access
+- Learning projects
+- Internal tools/dashboards
+
+> 📝 **Production tip:** For SEO-critical sites, consider using History API routing with proper server configuration.
 
 ## Defining Routes
 
@@ -44,6 +80,7 @@ router.on('/contact', ContactPage);
 Capture URL parameters:
 
 ```javascript
+// Example: Route with parameters - demonstrates accessing URL params in component
 // Route with parameter
 router.on('/users/:id', UserDetailPage);
 router.on('/posts/:postId/comments/:commentId', CommentDetailPage);
@@ -51,23 +88,78 @@ router.on('/posts/:postId/comments/:commentId', CommentDetailPage);
 // Access params in component
 class UserDetailPage extends Component {
   mounted() {
-    const userId = this.props.params.id;
+    const userId = this.props.params.id; // Router passes params via props
     console.log('User ID:', userId);
-    this.loadUser(userId);
+    this.loadUser(userId); // Fetch user data
   }
 
   async loadUser(id) {
     const user = await fetch(`/api/users/${id}`).then(r => r.json());
-    this.setState({ user });
+    this.setState({ user }); // Update state with fetched data
   }
 
   render() {
     const { user } = this.state;
-    if (!user) return h('div', {}, 'Loading...');
+    if (!user) return h('div', {}, 'Loading...'); // Show loading state
     
     return h('div', {}, [
       h('h1', {}, user.name),
       h('p', {}, user.email)
+    ]);
+  }
+}
+```
+
+**💡 Understanding route parameters:**
+
+**How it works:**
+```
+1. Define route pattern:  /users/:id
+2. User visits:           /users/123
+3. Router extracts:       { id: '123' }
+4. Component receives:    this.props.params.id === '123'
+```
+
+**Multiple parameters:**
+```javascript
+// Route: /posts/:postId/comments/:commentId
+// URL:   /posts/42/comments/7
+// Result: this.props.params = { postId: '42', commentId: '7' }
+
+class CommentDetailPage extends Component {
+  mounted() {
+    const { postId, commentId } = this.props.params;
+    console.log(`Post ${postId}, Comment ${commentId}`);
+    // Output: "Post 42, Comment 7"
+  }
+}
+```
+
+**⚠️ Important notes:**
+- Parameters are always **strings** (not numbers!)
+- Convert to number: `const id = parseInt(this.props.params.id)`
+- Parameter names must match: `:id` in route, `params.id` in code
+
+**Real-world example:**
+```javascript
+class ProductPage extends Component {
+  async mounted() {
+    // URL: /products/laptop-123
+    const productId = this.props.params.id; // 'laptop-123'
+    
+    // Fetch product data
+    const product = await http.get(`/api/products/${productId}`);
+    this.setState({ product });
+  }
+  
+  render() {
+    const { product } = this.state;
+    if (!product) return h('div', {}, 'Loading...');
+    
+    return h('div', {}, [
+      h('h1', {}, product.name),
+      h('p', {}, `Price: $${product.price}`),
+      h('p', {}, product.description)
     ]);
   }
 }
@@ -110,16 +202,17 @@ class Navigation extends Component {
 ### Programmatic Navigation
 
 ```javascript
+// Example: Navigate after action - demonstrates programmatic routing
 import { navigate } from './framework/src/router/index.js';
 
 class LoginForm extends Component {
   async handleSubmit(e) {
     e.preventDefault();
     
-    const success = await this.login();
+    const success = await this.login(); // Perform login
     
     if (success) {
-      // Redirect after successful login
+      // Redirect after successful login - changes URL and renders new component
       navigate('/dashboard');
     }
   }
@@ -138,18 +231,19 @@ class LoginForm extends Component {
 Pass data when navigating:
 
 ```javascript
+// Example: Query parameters - demonstrates passing data via URL
 // Navigate with query params
-navigate('/search?q=javascript&page=1');
+navigate('/search?q=javascript&page=1'); // URL becomes: #/search?q=javascript&page=1
 
 // Access in component
 class SearchPage extends Component {
   mounted() {
-    const params = new URLSearchParams(window.location.hash.split('?')[1]);
-    const query = params.get('q');
-    const page = params.get('page');
+    const params = new URLSearchParams(window.location.hash.split('?')[1]); // Parse query string
+    const query = params.get('q');    // 'javascript'
+    const page = params.get('page');  // '1'
     
-    this.setState({ query, page });
-    this.search(query, page);
+    this.setState({ query, page });  // Update component state
+    this.search(query, page);        // Perform search
   }
 }
 ```
@@ -159,6 +253,7 @@ class SearchPage extends Component {
 ### Multi-Page App
 
 ```javascript
+// Example: Complete SPA routing setup - demonstrates full application routing
 // index.js
 import { router } from './framework/src/router/index.js';
 import { store } from './store.js';
@@ -169,17 +264,17 @@ import PostsPage from './pages/Posts.js';
 import PostDetailPage from './pages/PostDetail.js';
 import NotFoundPage from './pages/NotFound.js';
 
-// Register routes
-router.on('/', HomePage);
-router.on('/about', AboutPage);
-router.on('/login', LoginPage);
-router.on('/posts', PostsPage);
-router.on('/posts/:id', PostDetailPage);
-router.on('*', NotFoundPage);
+// Register routes - order matters! More specific routes first
+router.on('/', HomePage);                // Homepage
+router.on('/about', AboutPage);          // Static page
+router.on('/login', LoginPage);          // Login page
+router.on('/posts', PostsPage);          // List page
+router.on('/posts/:id', PostDetailPage); // Detail page (must come after /posts)
+router.on('*', NotFoundPage);            // 404 - catches all unmatched routes
 
-// Start router
+// Start router - waits for DOM to be ready
 document.addEventListener('DOMContentLoaded', () => {
-  router.start('#app');
+  router.start('#app'); // Mount to #app element
 });
 ```
 
@@ -559,3 +654,9 @@ document.addEventListener('DOMContentLoaded', () => {
 - [State Management](./05-state-management.md) - Combine routing with global state
 - [HTTP Client](./09-http-client.md) - Fetch data on route changes
 - [Best Practices](./10-best-practices.md) - SPA architecture patterns
+
+---
+
+**📚 Navigation:** [← Prev: State Management](./05-state-management.md) | [Next: Event Handling →](./07-event-handling.md)
+
+---

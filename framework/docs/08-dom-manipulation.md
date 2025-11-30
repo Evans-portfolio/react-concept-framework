@@ -2,14 +2,36 @@
 
 Learn how to create and manipulate DOM elements with the h() function.
 
+---
+
+**📚 Navigation:** [← Prev: Event Handling](./07-event-handling.md) | [Next: HTTP Client →](./09-http-client.md)
+
+---
+
+## 📖 Table of Contents
+
+- [h() Function](#h-function)
+- [Basic Elements](#basic-elements)
+- [Attributes](#attributes)
+- [Event Handlers](#event-handlers)
+- [Conditional Rendering](#conditional-rendering)
+- [Lists and Keys](#lists-and-keys)
+- [Advanced Patterns](#advanced-patterns)
+
+---
+
 ## h() Function
 
 The `h()` function creates virtual DOM nodes:
 
 ```javascript
+// Example: h() function signature - creates virtual DOM nodes
 import { h } from './framework/src/dom/index.js';
 
 const vnode = h(type, props, children);
+// type: HTML tag name (string)
+// props: attributes and event handlers (object)
+// children: child elements or text (array or string)
 ```
 
 **Parameters:**
@@ -17,35 +39,62 @@ const vnode = h(type, props, children);
 - `props` (object): Attributes and event handlers
 - `children` (array|string): Child elements or text
 
+**💡 Understanding Virtual DOM:**
+
+The `h()` function doesn't create real DOM elements. It creates a JavaScript object that describes what the DOM should look like:
+
+```javascript
+// This code:
+h('div', { class: 'box' }, 'Hello')
+
+// Creates this object:
+{
+  type: 'div',
+  props: { class: 'box' },
+  children: ['Hello']
+}
+
+// Real DOM is created later by mount() or patch()
+```
+
+**Why Virtual DOM?**
+- ⚡ Fast - comparing JS objects is faster than touching DOM
+- 🎯 Efficient - only updates what changed
+- 🧩 Predictable - same input = same output
+
+> 📝 **Think of it like:** `h()` is a blueprint, `mount()` is the construction.
+
 ## Basic Elements
 
 ### Simple Elements
 
 ```javascript
+// Example: Basic elements - demonstrates simple h() usage
 // Text only
 h('p', {}, 'Hello World')
-// <p>Hello World</p>
+// Creates: <p>Hello World</p>
 
 // With attributes
 h('div', { class: 'container', id: 'main' }, 'Content')
-// <div class="container" id="main">Content</div>
+// Creates: <div class="container" id="main">Content</div>
 
 // Self-closing
 h('img', { src: 'image.jpg', alt: 'Description' })
-// <img src="image.jpg" alt="Description" />
+// Creates: <img src="image.jpg" alt="Description" />
 
 // Input
 h('input', { type: 'text', placeholder: 'Enter text' })
-// <input type="text" placeholder="Enter text" />
+// Creates: <input type="text" placeholder="Enter text" />
 ```
 
 ### Nested Elements
 
 ```javascript
+// Example: Nested elements - children as array of vnodes
 h('div', { class: 'card' }, [
-  h('h2', {}, 'Title'),
-  h('p', {}, 'Description'),
-  h('button', {}, 'Click')
+  h('h2', {}, 'Title'),        // Child 1
+  h('p', {}, 'Description'),   // Child 2
+  h('button', {}, 'Click')     // Child 3
 ])
 
 // Renders:
@@ -83,15 +132,16 @@ h('input', { disabled: true, checked: true, readonly: true })
 ### Dynamic Attributes
 
 ```javascript
+// Example: Dynamic attributes - attributes based on state/props
 class MyComponent extends Component {
   render() {
     const isActive = this.state.active;
     const userId = this.props.userId;
 
     return h('div', {
-      class: isActive ? 'box active' : 'box',
-      'data-user-id': userId,
-      style: `background: ${this.state.color};`
+      class: isActive ? 'box active' : 'box', // Conditional class
+      'data-user-id': userId,                  // Dynamic data attribute
+      style: `background: ${this.state.color};` // Dynamic inline style
     }, 'Content');
   }
 }
@@ -167,6 +217,7 @@ class UserList extends Component {
 Always use `key` prop for list items:
 
 ```javascript
+// Example: List with keys - demonstrates efficient list updates
 class TodoList extends Component {
   render() {
     const todos = this.state.todos;
@@ -174,11 +225,11 @@ class TodoList extends Component {
     return h('ul', {},
       todos.map(todo =>
         h('li', { 
-          key: todo.id // ✅ Use unique ID
+          key: todo.id // ✅ Use unique ID - helps framework identify which items changed
         }, [
           h('span', {}, todo.text),
           h('button', {
-            onclick: () => this.deleteTodo(todo.id)
+            onclick: () => this.deleteTodo(todo.id) // Delete specific todo
           }, 'Delete')
         ])
       )
@@ -186,7 +237,7 @@ class TodoList extends Component {
   }
 }
 
-// ❌ Bad: using index as key
+// ❌ Bad: using index as key - can cause bugs when list changes
 todos.map((todo, index) =>
   h('li', { key: index }, todo.text)
 );
@@ -197,13 +248,14 @@ todos.map((todo, index) =>
 ### If-Else
 
 ```javascript
+// Example: Conditional rendering - render different content based on state
 render() {
   const isLoggedIn = this.state.isLoggedIn;
 
   return h('div', {}, [
     isLoggedIn
-      ? h('p', {}, 'Welcome back!')
-      : h('p', {}, 'Please log in')
+      ? h('p', {}, 'Welcome back!')  // Show if logged in
+      : h('p', {}, 'Please log in')  // Show if logged out
   ]);
 }
 ```
@@ -535,3 +587,9 @@ items.map((item, i) => h('li', { key: i }, item.name))
 - [Components](./04-components.md) - Component architecture
 - [Event Handling](./07-event-handling.md) - Handle user interactions
 - [Best Practices](./10-best-practices.md) - Code quality tips
+
+---
+
+**📚 Navigation:** [← Prev: Event Handling](./07-event-handling.md) | [Next: HTTP Client →](./09-http-client.md)
+
+---

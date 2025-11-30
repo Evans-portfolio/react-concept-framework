@@ -2,6 +2,25 @@
 
 Write clean, maintainable, and performant code.
 
+---
+
+**📚 Navigation:** [← Prev: HTTP Client](./09-http-client.md) | [Back to Start: Getting Started →](./01-getting-started.md)
+
+---
+
+## 📖 Table of Contents
+
+- [Project Structure](#project-structure)
+- [Component Design](#component-design)
+- [State Management](#state-management)
+- [Performance Optimization](#performance-optimization)
+- [Security](#security)
+- [Testing](#testing)
+- [Code Style](#code-style)
+- [Common Pitfalls](#common-pitfalls)
+
+---
+
 ## Project Structure
 
 ### Recommended Layout
@@ -40,15 +59,16 @@ Each component should do one thing well:
 // ❌ Bad - too many responsibilities
 class UserDashboard extends Component {
   // Handles user profile, posts, comments, settings, notifications...
+  // Hard to maintain, test, and reuse
 }
 
 // ✅ Good - split into focused components
 class UserDashboard extends Component {
   render() {
     return h('div', {}, [
-      h(UserProfile, { userId: this.props.userId }),
-      h(UserPosts, { userId: this.props.userId }),
-      h(UserSettings, { userId: this.props.userId })
+      h(UserProfile, { userId: this.props.userId }),   // Handles profile only
+      h(UserPosts, { userId: this.props.userId }),     // Handles posts only
+      h(UserSettings, { userId: this.props.userId })   // Handles settings only
     ]);
   }
 }
@@ -57,10 +77,11 @@ class UserDashboard extends Component {
 ### 2. Component vs Function
 
 ```javascript
+// Example: When to use functions vs classes
 // Use functional components for simple, stateless UI
 function Button({ variant = 'primary', onClick, children }) {
   return h('button', {
-    class: `btn btn-${variant}`,
+    class: `btn btn-${variant}`, // No state, just renders props
     onclick: onClick
   }, children);
 }
@@ -69,10 +90,10 @@ function Button({ variant = 'primary', onClick, children }) {
 class UserProfile extends Component {
   constructor(props) {
     super(props);
-    this.state = { user: null };
+    this.state = { user: null }; // Has state
   }
 
-  async mounted() {
+  async mounted() { // Uses lifecycle hooks
     const user = await http.get(`/api/users/${this.props.userId}`);
     this.setState({ user });
   }
@@ -153,16 +174,17 @@ class TodoList extends Component {
 ### 2. Immutable Updates
 
 ```javascript
-// ❌ Bad - mutating state
+// Example: State mutation vs immutable updates
+// ❌ Bad - mutating state directly
 handleAddTodo(text) {
-  this.state.todos.push({ id: Date.now(), text });
-  this.setState(this.state);
+  this.state.todos.push({ id: Date.now(), text }); // Directly modifies array!
+  this.setState(this.state); // Framework may not detect change
 }
 
 // ✅ Good - immutable update
 handleAddTodo(text) {
   this.setState({
-    todos: [...this.state.todos, { id: Date.now(), text }]
+    todos: [...this.state.todos, { id: Date.now(), text }] // Creates new array
   });
 }
 
@@ -170,8 +192,8 @@ handleAddTodo(text) {
 handleUpdateUser(updates) {
   this.setState({
     user: {
-      ...this.state.user,
-      ...updates
+      ...this.state.user, // Copy existing properties
+      ...updates          // Apply updates
     }
   });
 }
@@ -293,33 +315,33 @@ render() {
 ### 3. Debounce/Throttle
 
 ```javascript
-// Debounce search
+// Example: Debounce search - waits for user to stop typing
 class SearchBox extends Component {
   handleInput(e) {
     const query = e.target.value;
-    this.setState({ query });
+    this.setState({ query }); // Update UI immediately
 
-    clearTimeout(this.searchTimeout);
+    clearTimeout(this.searchTimeout); // Cancel previous timer
     this.searchTimeout = setTimeout(() => {
-      this.search(query);
+      this.search(query); // Only search after 300ms of no typing
     }, 300);
   }
 
   beforeUnmount() {
-    clearTimeout(this.searchTimeout);
+    clearTimeout(this.searchTimeout); // Cleanup on unmount
   }
 }
 
-// Throttle scroll
+// Example: Throttle scroll - limits how often scroll handler runs
 class InfiniteScroll extends Component {
   mounted() {
     let ticking = false;
     
     window.addEventListener('scroll', () => {
-      if (!ticking) {
+      if (!ticking) { // Only run once per frame
         window.requestAnimationFrame(() => {
-          this.handleScroll();
-          ticking = false;
+          this.handleScroll(); // Handle scroll
+          ticking = false; // Allow next frame
         });
         ticking = true;
       }
@@ -684,3 +706,9 @@ Button({ variant: 'primary', children: 'Click' });
 - [Architecture](./02-architecture.md) - Framework internals
 - [Components](./04-components.md) - Component patterns
 - [State Management](./05-state-management.md) - Managing state
+
+---
+
+**📚 Navigation:** [← Prev: HTTP Client](./09-http-client.md) | [Back to Start: Getting Started →](./01-getting-started.md)
+
+---

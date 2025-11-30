@@ -2,6 +2,22 @@
 
 Learn how to handle user interactions and custom events.
 
+---
+
+**📚 Navigation:** [← Prev: Routing](./06-routing.md) | [Next: DOM Manipulation →](./08-dom-manipulation.md)
+
+---
+
+## 📖 Table of Contents
+
+- [DOM Events](#dom-events)
+- [Supported Events](#supported-events)
+- [Custom Events](#custom-events)
+- [Event Patterns](#event-patterns)
+- [Best Practices](#best-practices)
+
+---
+
 ## DOM Events
 
 ### Basic Event Handlers
@@ -9,22 +25,23 @@ Learn how to handle user interactions and custom events.
 Attach event handlers using `on{event}` props:
 
 ```javascript
+// Example: Basic DOM events - demonstrates common event handling patterns
 import { h } from './framework/src/dom/index.js';
 
 // Click event
 h('button', {
-  onclick: () => console.log('Clicked!')
+  onclick: () => console.log('Clicked!') // Handler runs when button is clicked
 }, 'Click me');
 
 // Input event
 h('input', {
-  oninput: (e) => console.log('Value:', e.target.value)
+  oninput: (e) => console.log('Value:', e.target.value) // Fires on every keystroke
 });
 
 // Submit event
 h('form', {
   onsubmit: (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page reload
     console.log('Form submitted');
   }
 }, [...]);
@@ -35,21 +52,22 @@ h('form', {
 #### Mouse Events
 
 ```javascript
+// Example: Mouse event handlers - demonstrates various mouse interactions
 class MouseDemo extends Component {
   render() {
     return h('div', {}, [
       h('button', { 
-        onclick: (e) => console.log('Click', e) 
+        onclick: (e) => console.log('Click', e) // Single click
       }, 'Click'),
       
       h('button', { 
-        ondblclick: (e) => console.log('Double click') 
+        ondblclick: (e) => console.log('Double click') // Double click
       }, 'Double Click'),
       
       h('div', {
-        onmouseenter: () => console.log('Mouse entered'),
-        onmouseleave: () => console.log('Mouse left'),
-        onmousemove: (e) => console.log('Mouse at', e.clientX, e.clientY)
+        onmouseenter: () => console.log('Mouse entered'), // When mouse enters element
+        onmouseleave: () => console.log('Mouse left'),    // When mouse leaves element
+        onmousemove: (e) => console.log('Mouse at', e.clientX, e.clientY) // Track mouse position
       }, 'Hover me')
     ]);
   }
@@ -77,28 +95,29 @@ class KeyboardDemo extends Component {
 #### Form Events
 
 ```javascript
+// Example: Form event handlers - demonstrates form interaction events
 class FormDemo extends Component {
   render() {
     return h('form', {
-      onsubmit: (e) => this.handleSubmit(e)
+      onsubmit: (e) => this.handleSubmit(e) // Form submission
     }, [
       h('input', {
-        oninput: (e) => this.handleInput(e),
-        onchange: (e) => console.log('Changed:', e.target.value),
-        onfocus: () => console.log('Focused'),
-        onblur: () => console.log('Blurred')
+        oninput: (e) => this.handleInput(e),  // Every keystroke
+        onchange: (e) => console.log('Changed:', e.target.value), // When input loses focus
+        onfocus: () => console.log('Focused'), // When input gets focus
+        onblur: () => console.log('Blurred')   // When input loses focus
       }),
       h('button', { type: 'submit' }, 'Submit')
     ]);
   }
 
   handleSubmit(e) {
-    e.preventDefault();
+    e.preventDefault(); // Prevent page reload
     console.log('Form submitted');
   }
 
   handleInput(e) {
-    this.setState({ value: e.target.value });
+    this.setState({ value: e.target.value }); // Update state on input
   }
 }
 ```
@@ -108,18 +127,19 @@ class FormDemo extends Component {
 ### Accessing Event Properties
 
 ```javascript
+// Example: Event object properties - demonstrates accessing event data
 class EventDemo extends Component {
   handleClick(e) {
-    console.log('Event type:', e.type);              // 'click'
-    console.log('Target element:', e.target);        // <button>
-    console.log('Current target:', e.currentTarget); // <button>
-    console.log('Mouse X:', e.clientX);              // 150
-    console.log('Mouse Y:', e.clientY);              // 200
+    console.log('Event type:', e.type);              // 'click' - event name
+    console.log('Target element:', e.target);        // <button> - element that triggered event
+    console.log('Current target:', e.currentTarget); // <button> - element with event listener
+    console.log('Mouse X:', e.clientX);              // 150 - mouse position X
+    console.log('Mouse Y:', e.clientY);              // 200 - mouse position Y
   }
 
   render() {
     return h('button', {
-      onclick: (e) => this.handleClick(e)
+      onclick: (e) => this.handleClick(e) // Pass event object to handler
     }, 'Click me');
   }
 }
@@ -231,11 +251,12 @@ class TodoList extends Component {
 ### Creating Custom Events
 
 ```javascript
+// Example: Emit custom event - demonstrates child-to-parent communication
 import { Component } from './framework/src/core/index.js';
 
 class Button extends Component {
   handleClick() {
-    // Emit custom event
+    // Emit custom event with data - parent can listen to this
     this.emit('custom-click', {
       timestamp: Date.now(),
       message: 'Button was clicked'
@@ -244,7 +265,7 @@ class Button extends Component {
 
   render() {
     return h('button', {
-      onclick: () => this.handleClick()
+      onclick: () => this.handleClick() // Trigger custom event on DOM click
     }, this.props.children);
   }
 }
@@ -253,17 +274,18 @@ class Button extends Component {
 ### Listening to Custom Events
 
 ```javascript
+// Example: Listen to custom event - demonstrates parent receiving child events
 class Parent extends Component {
   mounted() {
-    // Listen to custom event
+    // Listen to custom event from child component
     this.on('custom-click', (data) => {
-      console.log('Received:', data);
+      console.log('Received:', data); // Receives { timestamp, message }
     });
   }
 
   render() {
     return h('div', {}, [
-      h(Button, {}, 'Click me')
+      h(Button, {}, 'Click me') // Button will emit custom-click event
     ]);
   }
 }
@@ -272,16 +294,17 @@ class Parent extends Component {
 ### Global Custom Events
 
 ```javascript
+// Example: Global event bus - demonstrates cross-component communication
 // EventBus.js
 import { EventEmitter } from './framework/src/events/index.js';
-export const eventBus = new EventEmitter();
+export const eventBus = new EventEmitter(); // Shared event bus
 
 // Component A - Emit event
 import { eventBus } from './EventBus.js';
 
 class ComponentA extends Component {
   notify() {
-    eventBus.emit('notification', {
+    eventBus.emit('notification', { // Broadcast to all listeners
       type: 'success',
       message: 'Operation completed'
     });
@@ -289,7 +312,7 @@ class ComponentA extends Component {
 
   render() {
     return h('button', {
-      onclick: () => this.notify()
+      onclick: () => this.notify() // Trigger global event
     }, 'Notify');
   }
 }
@@ -298,12 +321,12 @@ class ComponentA extends Component {
 class ComponentB extends Component {
   mounted() {
     this.unsubscribe = eventBus.on('notification', (data) => {
-      this.setState({ notification: data });
+      this.setState({ notification: data }); // Update state when event received
     });
   }
 
   beforeUnmount() {
-    this.unsubscribe(); // Cleanup
+    this.unsubscribe(); // Cleanup - prevent memory leaks!
   }
 
   render() {
@@ -312,6 +335,114 @@ class ComponentB extends Component {
   }
 }
 ```
+
+**💡 Understanding Custom Events (Pub/Sub pattern):**
+
+**How it works:**
+```
+┌─────────────────┐         ┌──────────────┐         ┌─────────────────┐
+│  Component A    │         │  EventBus    │         │  Component B    │
+│  (Publisher)    │────────▶│  (Mediator)  │────────▶│  (Subscriber)   │
+└─────────────────┘         └──────────────┘         └─────────────────┘
+     emit()                                                on()
+```
+
+**Step-by-step:**
+```javascript
+// Step 1: Component B subscribes ("I want to listen")
+eventBus.on('user-login', (userData) => {
+  console.log('User logged in:', userData);
+});
+
+// Step 2: Component A emits ("Something happened!")
+eventBus.emit('user-login', { name: 'Alice', id: 123 });
+
+// Step 3: Component B's callback fires automatically
+// Output: "User logged in: { name: 'Alice', id: 123 }"
+```
+
+**When to use custom events:**
+- ✅ Components that don't have parent-child relationship
+- ✅ Global notifications (toasts, alerts)
+- ✅ Multiple components need to react to same action
+- ✅ Decoupling components (loose coupling)
+
+**When NOT to use:**
+- ❌ Parent → Child communication (use props instead)
+- ❌ Sharing state (use global store instead)
+- ❌ Simple callbacks (use props with functions)
+
+**Real-world example - Shopping Cart:**
+```javascript
+// ProductCard.js - Adds item to cart
+class ProductCard extends Component {
+  addToCart() {
+    eventBus.emit('cart:add', {
+      id: this.props.product.id,
+      name: this.props.product.name,
+      price: this.props.product.price
+    });
+  }
+  
+  render() {
+    return h('div', {}, [
+      h('h3', {}, this.props.product.name),
+      h('button', { onclick: () => this.addToCart() }, 'Add to Cart')
+    ]);
+  }
+}
+
+// CartBadge.js - Shows cart count
+class CartBadge extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { count: 0 };
+  }
+  
+  mounted() {
+    this.unsubscribe = eventBus.on('cart:add', () => {
+      this.setState({ count: this.state.count + 1 });
+    });
+  }
+  
+  beforeUnmount() {
+    this.unsubscribe(); // Always cleanup!
+  }
+  
+  render() {
+    return h('span', { class: 'badge' }, this.state.count);
+  }
+}
+
+// CartSidebar.js - Shows cart items
+class CartSidebar extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { items: [] };
+  }
+  
+  mounted() {
+    this.unsubscribe = eventBus.on('cart:add', (item) => {
+      this.setState({ items: [...this.state.items, item] });
+    });
+  }
+  
+  beforeUnmount() {
+    this.unsubscribe();
+  }
+  
+  render() {
+    return h('div', {}, [
+      h('h3', {}, 'Cart'),
+      h('ul', {}, this.state.items.map(item =>
+        h('li', { key: item.id }, `${item.name} - $${item.price}`)
+      ))
+    ]);
+  }
+}
+```
+
+> ⚠️ **Critical:** Always unsubscribe in `beforeUnmount()` to prevent memory leaks!
 
 ## Real-World Examples
 
@@ -454,33 +585,45 @@ class SearchBox extends Component {
 ### Toast Notifications
 
 ```javascript
+import { Component, h } from './framework/src/core/index.js';
+import { on, off, emit } from './framework/src/events/index.js';
+
 class Toast extends Component {
-  constructor(props) {
-    super(props);
+  constructor() {
+    super();
     this.state = {
-      notifications: []
+      notifications: [] // Array of {id, type, message}
     };
+    this._notificationHandler = null;
   }
 
   mounted() {
-    // Listen for notification events
-    this.on('notification', (event) => {
+    // Listen for custom 'notification' events
+    this._notificationHandler = (event) => {
       this.addNotification(event.detail);
-    });
+    };
+    on('notification', this._notificationHandler);
   }
 
-  addNotification(notification) {
+  beforeDestroy() {
+    // Clean up event listener
+    if (this._notificationHandler) {
+      off('notification', this._notificationHandler);
+    }
+  }
+
+  addNotification({ type = 'info', message, duration = 3000 }) {
     const id = Date.now();
-    const item = { id, ...notification };
+    const notification = { id, type, message };
     
     this.setState({
-      notifications: [...this.state.notifications, item]
+      notifications: [...this.state.notifications, notification]
     });
 
-    // Auto-remove after 3 seconds
+    // Auto-remove after duration
     setTimeout(() => {
       this.removeNotification(id);
-    }, 3000);
+    }, duration);
   }
 
   removeNotification(id) {
@@ -490,26 +633,45 @@ class Toast extends Component {
   }
 
   render() {
+    const { notifications } = this.state;
+
     return h('div', { class: 'toast-container' },
-      this.state.notifications.map(notif =>
+      notifications.map(notif =>
         h('div', {
           key: notif.id,
-          class: `toast toast-${notif.type}`
+          class: `toast toast-${notif.type}`,
+          onclick: () => this.removeNotification(notif.id)
         }, [
-          h('span', {}, notif.message),
+          h('span', { class: 'toast-icon' }, this.getIcon(notif.type)),
+          h('span', { class: 'toast-message' }, notif.message),
           h('button', {
-            onclick: () => this.removeNotification(notif.id)
+            class: 'toast-close',
+            onclick: (e) => {
+              e.stopPropagation();
+              this.removeNotification(notif.id);
+            }
           }, '×')
         ])
       )
     );
+  }
+
+  getIcon(type) {
+    const icons = {
+      success: '✓',
+      error: '✕',
+      warning: '⚠',
+      info: 'ℹ'
+    };
+    return icons[type] || icons.info;
   }
 }
 
 // Usage in another component
 class MyComponent extends Component {
   showNotification() {
-    this.emit('notification', {
+    // Emit global event
+    emit('notification', {
       type: 'success',
       message: 'Operation successful!'
     });
@@ -576,3 +738,9 @@ beforeUnmount() {
 - [Components](./04-components.md) - Component lifecycle
 - [State Management](./05-state-management.md) - Managing state
 - [Best Practices](./10-best-practices.md) - Code quality
+
+---
+
+**📚 Navigation:** [← Prev: Routing](./06-routing.md) | [Next: DOM Manipulation →](./08-dom-manipulation.md)
+
+---

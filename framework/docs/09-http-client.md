@@ -2,63 +2,110 @@
 
 Make API requests with the built-in HTTP client.
 
+---
+
+**📚 Navigation:** [← Prev: DOM Manipulation](./08-dom-manipulation.md) | [Next: Best Practices →](./10-best-practices.md)
+
+---
+
+## 📖 Table of Contents
+
+- [Basic Usage](#basic-usage)
+- [GET Requests](#get-requests)
+- [POST Requests](#post-requests)
+- [PUT Requests](#put-requests)
+- [DELETE Requests](#delete-requests)
+- [Error Handling](#error-handling)
+- [Authentication](#authentication)
+- [Real-World Examples](#real-world-examples)
+
+---
+
 ## Basic Usage
 
 ```javascript
+// Example: HTTP client methods - demonstrates all CRUD operations
 import { http } from './framework/src/http/index.js';
 
-// GET request
+// GET request - read data
 const data = await http.get('/api/users');
 
-// POST request
+// POST request - create new resource
 const result = await http.post('/api/users', {
   name: 'Alice',
   email: 'alice@example.com'
 });
 
-// PUT request
+// PUT request - update existing resource
 const updated = await http.put('/api/users/1', {
   name: 'Alice Updated'
 });
 
-// DELETE request
+// DELETE request - remove resource
 await http.delete('/api/users/1');
 ```
+
+**💡 HTTP Methods explained:**
+
+| Method | Purpose | Has Body | Idempotent |
+|--------|---------|----------|------------|
+| **GET** | Read data | ❌ No | ✅ Yes |
+| **POST** | Create new | ✅ Yes | ❌ No |
+| **PUT** | Update (replace) | ✅ Yes | ✅ Yes |
+| **PATCH** | Update (partial) | ✅ Yes | ❌ No |
+| **DELETE** | Remove | ❌ No | ✅ Yes |
+
+**Idempotent** means calling it multiple times has the same effect as calling once.
+
+**Example:**
+```javascript
+// GET - idempotent (always returns same user)
+await http.get('/api/users/1');
+
+// POST - not idempotent (creates new user each time!)
+await http.post('/api/users', { name: 'Alice' });
+
+// PUT - idempotent (sets user to same state each time)
+await http.put('/api/users/1', { name: 'Alice' });
+```
+
+> ⚠️ **Common mistake:** Using POST when you should use PUT/PATCH for updates!
 
 ## GET Requests
 
 ### Simple GET
 
 ```javascript
+// Example: GET with loading state - demonstrates async data fetching
 class UserList extends Component {
   constructor(props) {
     super(props);
     this.state = {
       users: [],
-      loading: false
+      loading: false // Track loading state
     };
   }
 
   async mounted() {
-    this.setState({ loading: true });
+    this.setState({ loading: true }); // Show loading
     
     try {
-      const users = await http.get('/api/users');
-      this.setState({ users, loading: false });
+      const users = await http.get('/api/users'); // Fetch data
+      this.setState({ users, loading: false }); // Update state with data
     } catch (error) {
       console.error('Failed to load users:', error);
-      this.setState({ loading: false });
+      this.setState({ loading: false }); // Hide loading on error
     }
   }
 
   render() {
     const { users, loading } = this.state;
 
-    if (loading) return h('div', {}, 'Loading...');
+    if (loading) return h('div', {}, 'Loading...'); // Loading state
 
     return h('ul', {},
       users.map(user =>
-        h('li', { key: user.id }, user.name)
+        h('li', { key: user.id }, user.name) // Render users
       )
     );
   }
@@ -79,6 +126,84 @@ const params = new URLSearchParams({
 });
 const users = await http.get(`/api/users?${params}`);
 ```
+
+**💡 Understanding query parameters:**
+
+Query parameters add filters/options to URLs:
+```
+https://api.example.com/users?page=2&limit=20&sort=name
+
+?           - Starts query string
+page=2      - First parameter
+&           - Separates parameters  
+limit=20    - Second parameter
+&sort=name  - Third parameter
+```
+
+**When to use URLSearchParams:**
+```javascript
+// ❌ Manual - error-prone, hard to read
+const url = `/api/search?q=${query}&page=${page}&limit=${limit}`;
+
+// ✅ URLSearchParams - clean, handles encoding
+const params = new URLSearchParams({
+  q: query,        // Automatically encodes special chars
+  page: page,
+  limit: limit
+});
+const url = `/api/search?${params}`;
+
+// Example with special characters:
+const params = new URLSearchParams({
+  q: 'hello world',  // Becomes: hello%20world
+  tag: 'C++'         // Becomes: C%2B%2B
+});
+// Result: ?q=hello%20world&tag=C%2B%2B
+```
+
+**Dynamic parameters:**
+```javascript
+class UserList extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      users: [],
+      page: 1,
+      limit: 10,
+      sortBy: 'name'
+    };
+  }
+
+  async loadUsers() {
+    const { page, limit, sortBy } = this.state;
+    
+    // Build params from state
+    const params = new URLSearchParams({
+      page: page.toString(),     // Must be strings!
+      limit: limit.toString(),
+      sort: sortBy
+    });
+    
+    const users = await http.get(`/api/users?${params}`);
+    this.setState({ users });
+  }
+
+  nextPage() {
+    this.setState({ page: this.state.page + 1 }, () => {
+      this.loadUsers(); // Reload with new page
+    });
+  }
+
+  render() {
+    return h('div', {}, [
+      h('ul', {}, this.state.users.map(u => h('li', { key: u.id }, u.name))),
+      h('button', { onclick: () => this.nextPage() }, 'Next Page')
+    ]);
+  }
+}
+```
+
+> 📝 **Tip:** Use URLSearchParams when you have multiple or dynamic query parameters.
 
 ### GET Single Resource
 
@@ -116,29 +241,30 @@ class UserDetail extends Component {
 ### Creating Resources
 
 ```javascript
+// Example: POST request - demonstrates creating new resource with form
 class CreateUser extends Component {
   constructor(props) {
     super(props);
     this.state = {
       name: '',
       email: '',
-      submitting: false
+      submitting: false // Track form submission state
     };
   }
 
   async handleSubmit(e) {
-    e.preventDefault();
-    this.setState({ submitting: true });
+    e.preventDefault(); // Prevent page reload
+    this.setState({ submitting: true }); // Disable submit button
 
     try {
-      const user = await http.post('/api/users', {
+      const user = await http.post('/api/users', { // Send data to API
         name: this.state.name,
         email: this.state.email
       });
 
       console.log('Created user:', user);
       
-      // Reset form
+      // Reset form after successful creation
       this.setState({
         name: '',
         email: '',
@@ -146,7 +272,7 @@ class CreateUser extends Component {
       });
     } catch (error) {
       console.error('Failed to create user:', error);
-      this.setState({ submitting: false });
+      this.setState({ submitting: false }); // Re-enable submit button
     }
   }
 
@@ -159,19 +285,19 @@ class CreateUser extends Component {
       h('input', {
         type: 'text',
         value: name,
-        oninput: (e) => this.setState({ name: e.target.value }),
+        oninput: (e) => this.setState({ name: e.target.value }), // Update state on input
         placeholder: 'Name'
       }),
       h('input', {
         type: 'email',
         value: email,
-        oninput: (e) => this.setState({ email: e.target.value }),
+        oninput: (e) => this.setState({ email: e.target.value }), // Update state on input
         placeholder: 'Email'
       }),
       h('button', {
         type: 'submit',
-        disabled: submitting
-      }, submitting ? 'Saving...' : 'Create User')
+        disabled: submitting // Disable while submitting
+      }, submitting ? 'Saving...' : 'Create User') // Show feedback
     ]);
   }
 }
@@ -180,6 +306,7 @@ class CreateUser extends Component {
 ### Login Example
 
 ```javascript
+// Example: Login with authentication - demonstrates POST with error handling and navigation
 import { http } from '../framework/src/http/index.js';
 import { store } from './store.js';
 import { navigate } from '../framework/src/router/index.js';
@@ -197,7 +324,7 @@ class LoginPage extends Component {
 
   async handleLogin(e) {
     e.preventDefault();
-    this.setState({ loading: true, error: null });
+    this.setState({ loading: true, error: null }); // Clear previous errors
 
     try {
       const response = await http.post('https://reqres.in/api/login', {
@@ -205,7 +332,7 @@ class LoginPage extends Component {
         password: this.state.password
       });
 
-      // Save to store
+      // Save to store - update global auth state
       store.setState({
         user: {
           email: this.state.email,
@@ -214,11 +341,11 @@ class LoginPage extends Component {
         }
       });
 
-      // Redirect
+      // Redirect to dashboard after successful login
       navigate('/dashboard');
     } catch (error) {
       this.setState({
-        error: 'Login failed. Check your credentials.',
+        error: 'Login failed. Check your credentials.', // Show error message
         loading: false
       });
     }
@@ -668,3 +795,9 @@ async function fetchWithCache(url) {
 - [State Management](./05-state-management.md) - Store API responses
 - [Components](./04-components.md) - Lifecycle for data fetching
 - [Best Practices](./10-best-practices.md) - Error handling patterns
+
+---
+
+**📚 Navigation:** [← Prev: DOM Manipulation](./08-dom-manipulation.md) | [Next: Best Practices →](./10-best-practices.md)
+
+---

@@ -2,6 +2,25 @@
 
 Get started with the framework in your project.
 
+---
+
+**📚 Navigation:** [← Prev: Architecture](./02-architecture.md) | [Next: Components →](./04-components.md)
+
+---
+
+## 📖 Table of Contents
+
+- [Quick Start](#quick-start)
+- [Project Structure](#project-structure)
+- [HTML Setup](#html-setup)
+- [Entry Point](#entry-point)
+- [Development Server](#development-server)
+- [Build for Production](#build-for-production)
+- [TypeScript Support](#typescript-support)
+- [Troubleshooting](#troubleshooting)
+
+---
+
 ## Quick Start
 
 No npm package needed - import directly from ES modules:
@@ -11,6 +30,15 @@ import { Component, h } from './framework/src/core/index.js';
 import { router } from './framework/src/router/index.js';
 import { createStore } from './framework/src/state/index.js';
 ```
+
+**💡 Why ES modules?**
+
+- ✅ **No build step required** - works directly in modern browsers
+- ✅ **Native performance** - browsers optimize ES module loading
+- ✅ **Tree-shakeable** - only import what you need
+- ✅ **Standards-based** - uses official JavaScript modules spec
+
+> ⚠️ **Browser support:** Requires modern browsers (Chrome 61+, Firefox 60+, Safari 11+). For older browsers, use a bundler like Rollup or Webpack.
 
 ## Project Structure
 
@@ -68,25 +96,26 @@ my-app/
 ### src/index.js
 
 ```javascript
+// Example: Application entry point - sets up router and global state
 import { router } from '../framework/src/router/index.js';
 import { createStore, setGlobalStore } from '../framework/src/state/index.js';
 import HomePage from './pages/Home.js';
 import AboutPage from './pages/About.js';
 
-// Initialize global store
+// Initialize global store - shared state across all components
 const store = createStore({
   user: null,
   theme: 'light'
 });
-setGlobalStore(store);
+setGlobalStore(store); // Make store accessible globally
 
-// Configure routes
+// Configure routes - map URLs to page components
 router.on('/', HomePage);
 router.on('/about', AboutPage);
 
 // Start app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  router.start('#app');
+  router.start('#app'); // Mount router to #app element
 });
 ```
 
@@ -348,3 +377,9 @@ http://localhost:8000/#/about
 - [Getting Started](./01-getting-started.md) - Build your first app
 - [Architecture](./02-architecture.md) - Understand the framework
 - [Components](./04-components.md) - Create components
+
+---
+
+**📚 Navigation:** [← Prev: Architecture](./02-architecture.md) | [Next: Components →](./04-components.md)
+
+---

@@ -2,6 +2,32 @@
 
 Understand how the framework works under the hood.
 
+---
+
+**📚 Navigation:** [← Prev: Getting Started](./01-getting-started.md) | [Next: Installation →](./03-installation.md)
+
+---
+
+## 📖 Table of Contents
+
+- [Overview](#overview)
+- [Component Lifecycle](#component-lifecycle)
+- [Virtual DOM](#virtual-dom)
+  - [Why Virtual DOM?](#why-virtual-dom)
+  - [Virtual Node Structure](#virtual-node-structure)
+  - [Reconciliation Algorithm](#reconciliation-algorithm)
+  - [Key-Based Reconciliation](#key-based-reconciliation)
+- [State Management](#state-management)
+- [Router Architecture](#router-architecture)
+- [Event System](#event-system)
+- [HTTP Client](#http-client)
+- [Performance Optimizations](#performance-optimizations)
+- [Module Structure](#module-structure)
+- [Design Principles](#design-principles)
+- [Comparison with Other Frameworks](#comparison-with-other-frameworks)
+
+---
+
 ## Overview
 
 Our framework follows a component-based architecture similar to React, with these core concepts:
@@ -53,14 +79,38 @@ Create → BeforeMount → Mounted → BeforeUpdate → Updated → BeforeUnmoun
 12. **beforeUnmount()** - Before removal
 13. **unmounted()** - Cleanup complete
 
+**💡 When to use each hook:**
+
+- **`created()`** - Initialize data, setup subscriptions
+- **`mounted()`** - Access DOM, make API calls, start timers
+- **`beforeUpdate()`** - Save DOM state before changes (e.g., scroll position)
+- **`updated()`** - React to DOM changes, update third-party libraries
+- **`beforeUnmount()`** - Cleanup: remove listeners, cancel requests, clear timers
+- **`unmounted()`** - Final cleanup after component removed
+
+> 📝 **Learn more:** See [Components](./04-components.md) for detailed lifecycle examples.
+
 ## Virtual DOM
 
 ### Why Virtual DOM?
 
 Direct DOM manipulation is slow. Virtual DOM provides:
-- **Fast diffing**: Compare virtual trees in memory
-- **Minimal updates**: Only patch what changed
-- **Predictable rendering**: Declarative UI
+- **Fast diffing**: Compare virtual trees in memory (JavaScript objects)
+- **Minimal updates**: Only patch what changed in real DOM
+- **Predictable rendering**: Declarative UI - describe what you want, not how to build it
+
+**💡 Performance benefit:**
+```javascript
+// Without Virtual DOM: Every update touches real DOM
+element.textContent = 'New text';  // Slow!
+element.className = 'active';      // Slow!
+
+// With Virtual DOM: Batch updates, touch DOM once
+const vNode = h('div', { class: 'active' }, 'New text');
+patch(oldVNode, vNode); // Fast! Only one DOM operation
+```
+
+> ⚠️ **Note:** Virtual DOM isn't always faster than direct DOM manipulation for simple updates, but it makes complex UIs manageable and prevents unnecessary re-renders.
 
 ### Virtual Node Structure
 
@@ -74,6 +124,31 @@ Direct DOM manipulation is slow. Virtual DOM provides:
   children: [
     { type: 'h1', props: {}, children: ['Hello'] },
     { type: 'p', props: {}, children: ['World'] }
+  ]
+}
+```
+
+**💡 What each field means:**
+
+- **`type`** - HTML tag name (string) or component class
+- **`props`** - Attributes and event handlers
+  - HTML attributes: `class`, `id`, `style`, etc.
+  - Event handlers: `onclick`, `oninput`, etc. (always lowercase)
+- **`children`** - Array of child nodes or strings for text content
+
+**Example transformation:**
+```javascript
+// Your code:
+h('div', { class: 'container' }, [
+  h('h1', {}, 'Hello')
+])
+
+// Becomes this Virtual Node object:
+{
+  type: 'div',
+  props: { class: 'container' },
+  children: [
+    { type: 'h1', props: {}, children: ['Hello'] }
   ]
 }
 ```
@@ -104,6 +179,27 @@ function patch(oldVNode, newVNode, container) {
 }
 ```
 
+**💡 How diffing works:**
+
+1. **Type comparison** - If element type changed (`div` → `span`), replace entire subtree
+   - This is faster than trying to morph one type into another
+   
+2. **Text nodes** - Simple string comparison
+   - If text changed, update `textContent` property
+   
+3. **Attribute updates** - Compare old and new props:
+   ```javascript
+   // Add new attributes
+   // Update changed attributes  
+   // Remove old attributes not in new props
+   ```
+   
+4. **Children diffing** - Most complex part:
+   - Without keys: O(n²) comparison
+   - With keys: O(n) using key-based lookup
+   
+> ⚠️ **Performance tip:** Always use `key` prop for list items to enable fast diffing!
+
 ### Key-Based Reconciliation
 
 Using `key` prop optimizes list updates:
@@ -122,21 +218,72 @@ Using `key` prop optimizes list updates:
 ]
 ```
 
+**💡 How key-based diffing works:**
+
+1. **Build a map** of old children by their keys:
+   ```javascript
+   oldKeyMap = { 1: oldNode1, 2: oldNode2 }
+   ```
+
+2. **For each new child**, look up by key:
+   ```javascript
+   if (oldKeyMap[newChild.key]) {
+     // Reuse existing DOM node, just update it
+     patch(oldNode, newNode);
+   } else {
+     // Create new DOM node
+     createElement(newNode);
+   }
+   ```
+
+3. **Remove** old nodes not in new list
+
+**Performance comparison:**
+- ✅ **With keys**: ~5ms for 100 items (10x faster!)
+- ❌ **Without keys**: ~50ms for 100 items
+
+> 📝 **Best practice:** Use stable unique IDs (database IDs) as keys, not array indices!
+
 ## State Management
 
 ### Reactive Store
 
 ```javascript
+// Example: Create reactive store - demonstrates state management
 const store = createStore({ count: 0 });
 
-// Subscribe to changes
+// Subscribe to changes - callback runs when state updates
 store.subscribe(() => {
   console.log('State changed:', store.getState());
 });
 
-// Update triggers subscribers
+// Update triggers subscribers - all listeners are notified
 store.setState({ count: 1 }); // Logs: "State changed: { count: 1 }"
 ```
+
+**💡 How reactivity works:**
+
+1. **Store holds state** - Single source of truth
+2. **Subscribers listen** - Components register callbacks
+3. **setState triggers** - Calls all subscribers
+4. **Components re-render** - Automatically update UI
+
+**Example flow:**
+```javascript
+// 1. Component subscribes
+store.subscribe(() => {
+  this.setState({ count: store.getState().count });
+});
+
+// 2. Somewhere else, state changes
+store.setState({ count: store.getState().count + 1 });
+
+// 3. Subscriber callback fires
+// 4. Component's setState called
+// 5. Component re-renders with new data
+```
+
+> 📝 **Learn more:** See [State Management](./05-state-management.md) for advanced patterns.
 
 ### Data Flow
 
@@ -166,6 +313,20 @@ store.setState({ count: 1 }); // Logs: "State changed: { count: 1 }"
 └──────────┘
 ```
 
+**💡 Unidirectional data flow:**
+
+This one-way flow makes state changes predictable:
+1. **Actions** are triggered (user clicks, API response)
+2. **State** updates through `setState()`
+3. **View** automatically re-renders
+
+**Benefits:**
+- Easy to debug - just follow the flow
+- Predictable - same state = same UI
+- Testable - pure functions for logic
+
+> ⚠️ **Anti-pattern:** Never update DOM directly! Always go through state.
+
 ## Router Architecture
 
 ### Hash-Based Routing
@@ -186,27 +347,73 @@ Extract params: { id: '123' }
 Render UserDetailPage with params
 ```
 
+**💡 Why hash-based routing?**
+
+1. **No server configuration** - works on any static host
+2. **Client-side only** - doesn't trigger page reload
+3. **Browser history** - back/forward buttons work
+4. **Simple implementation** - just listen to `hashchange` event
+
+**Trade-offs:**
+- ✅ Easy to deploy (GitHub Pages, Netlify)
+- ✅ Works without build tools
+- ❌ URLs look less clean (`#/about` vs `/about`)
+- ❌ Not great for SEO (but fine for SPAs)
+
+> 📝 **Learn more:** See [Routing](./06-routing.md) for advanced routing patterns.
+
 ### Route Matching
 
 ```javascript
+// Example: Route pattern matching - extracts parameters from URLs
 class Route {
   match(pathname) {
+    // Convert :id to regex capture group
     const pattern = this.path.replace(/:([^/]+)/g, '([^/]+)');
     const regex = new RegExp(`^${pattern}$`);
     const match = pathname.match(regex);
     
     if (match) {
+      // Extract parameter names from pattern
       const keys = this.path.match(/:([^/]+)/g) || [];
       const params = {};
+      // Map captured values to parameter names
       keys.forEach((key, i) => {
         params[key.slice(1)] = match[i + 1];
       });
-      return params;
+      return params; // Returns { id: '123' } for /users/123
     }
     return null;
   }
 }
 ```
+
+**💡 How pattern matching works:**
+
+1. **Convert route pattern to regex:**
+   ```javascript
+   '/users/:id' → /^\/users\/([^/]+)$/
+   ```
+
+2. **Match against URL:**
+   ```javascript
+   '/users/123'.match(/^\/users\/([^/]+)$/)
+   // Returns: ['/users/123', '123']
+   ```
+
+3. **Extract parameters:**
+   ```javascript
+   { id: '123' }
+   ```
+
+**Supported patterns:**
+```javascript
+'/users'           // Static route
+'/users/:id'       // One parameter
+'/users/:id/posts/:postId'  // Multiple parameters
+```
+
+> ⚠️ **Note:** Query strings (`?key=value`) are not parsed automatically. Use `URLSearchParams` if needed.
 
 ## Event System
 
@@ -225,15 +432,48 @@ container.addEventListener('click', (e) => {
 h('button', { onclick: () => console.log('Clicked') }, 'Click me')
 ```
 
+**💡 Why event delegation?**
+
+1. **Performance** - One listener instead of thousands
+2. **Memory efficient** - No listener per element
+3. **Dynamic content** - Works for elements added later
+
+**How it works:**
+```javascript
+// Without delegation (bad):
+buttons.forEach(btn => {
+  btn.addEventListener('click', handler);  // 1000 listeners!
+});
+
+// With delegation (good):
+container.addEventListener('click', (e) => {
+  if (e.target.matches('button')) handler(e);  // 1 listener!
+});
+```
+
 ### Custom Events
 
 ```javascript
-component.on('custom-event', (data) => {
-  console.log(data);
+import { on, off, emit } from './framework/src/events/index.js';
+
+// Listen to event
+on('user-login', (userData) => {
+  console.log('User logged in:', userData);
 });
 
-component.emit('custom-event', { message: 'Hello' });
+// Emit event
+emit('user-login', { name: 'Alice', id: 123 });
+
+// Cleanup
+off('user-login', handler);
 ```
+
+**💡 Use cases:**
+- Component communication (parent ↔ child)
+- Global notifications (toasts, alerts)
+- Pub/sub patterns
+
+> 📝 **Learn more:** See [Event Handling](./07-event-handling.md) for detailed examples.
 
 ## HTTP Client
 
@@ -259,6 +499,27 @@ export const http = {
 };
 ```
 
+**💡 Why wrap fetch?**
+
+1. **DRY** - Don't repeat headers and error handling
+2. **Interceptors** - Add auth tokens automatically
+3. **Defaults** - JSON parsing, content-type headers
+4. **Error handling** - Centralized error responses
+
+**Usage:**
+```javascript
+// Simple and clean
+const users = await http.get('/api/users');
+
+// Instead of verbose fetch
+const response = await fetch('/api/users', {
+  headers: { 'Content-Type': 'application/json' }
+});
+const users = await response.json();
+```
+
+> 📝 **Learn more:** See [HTTP Client](./09-http-client.md) for error handling and auth patterns.
+
 ## Performance Optimizations
 
 ### 1. Key-Based Reconciliation
@@ -267,8 +528,13 @@ Reuses DOM nodes instead of recreating:
 
 ```javascript
 // Before: 50ms for 100 items
-// After: 5ms for 100 items (10x faster)
+// After: 5ms for 100 items (10x faster!)
 ```
+
+**How it helps:**
+- Framework knows which items are same (by key)
+- Reuses existing DOM nodes
+- Only updates changed properties
 
 ### 2. Batched Updates
 
@@ -283,6 +549,18 @@ handleClick() {
 }
 ```
 
+**💡 Why batching matters:**
+
+Without batching:
+```
+setState → render → diff → patch (3 times = slow!)
+```
+
+With batching:
+```
+setState → setState → setState → render → diff → patch (1 time = fast!)
+```
+
 ### 3. Lazy Rendering
 
 Components only render when mounted:
@@ -291,6 +569,13 @@ Components only render when mounted:
 const component = new MyComponent(); // Not rendered yet
 component.mount(container); // Now rendered
 ```
+
+**Benefits:**
+- No wasted work for hidden components
+- Faster initial page load
+- Better memory usage
+
+> 💡 **Tip:** For large lists, consider implementing virtual scrolling (render only visible items).
 
 ## Module Structure
 
@@ -358,6 +643,15 @@ framework/
 
 ## Next Steps
 
-- [Components](./04-components.md) - Build reusable UI components
-- [State Management](./05-state-management.md) - Manage application state
-- [Performance](./10-best-practices.md) - Optimization techniques
+Now that you understand the architecture:
+
+- **[Installation](./03-installation.md)** - Set up your development environment
+- **[Components](./04-components.md)** - Build reusable UI components
+- **[State Management](./05-state-management.md)** - Manage application state
+- **[Best Practices](./10-best-practices.md)** - Optimization techniques and patterns
+
+---
+
+**📚 Navigation:** [← Prev: Getting Started](./01-getting-started.md) | [Next: Installation →](./03-installation.md)
+
+---
