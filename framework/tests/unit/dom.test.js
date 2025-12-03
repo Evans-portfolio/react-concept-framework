@@ -128,6 +128,36 @@ describe('createElement - Virtual to Real DOM', () => {
     expect(parentHandler).toHaveBeenCalled();
     expect(parentHandler.lastDeletedId).toBe('2');
   });
+
+  test('should support preventDefault and stopPropagation', () => {
+    // Requirement #23: It prevents default browser behavior and event bubbling
+    const formHandler = jest.fn((e) => {
+      e.preventDefault(); // Prevent form submission
+    });
+    
+    const buttonHandler = jest.fn((e) => {
+      e.stopPropagation(); // Stop event bubbling
+    });
+
+    const vnode = h('form', { onsubmit: formHandler }, [
+      h('button', { onclick: buttonHandler }, 'Submit')
+    ]);
+    
+    const element = createElement(vnode);
+    
+    // Create and dispatch submit event
+    const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+    element.dispatchEvent(submitEvent);
+    
+    expect(formHandler).toHaveBeenCalled();
+    expect(submitEvent.defaultPrevented).toBe(true);
+    
+    // Create and dispatch click event
+    const clickEvent = new Event('click', { bubbles: true, cancelable: true });
+    element.children[0].dispatchEvent(clickEvent);
+    
+    expect(buttonHandler).toHaveBeenCalled();
+  });
 });
 
 describe('DOM Diffing and Patching', () => {
