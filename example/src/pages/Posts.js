@@ -18,6 +18,7 @@ export default class PostsPage extends Component {
     };
 
     this.handleCreatePost = this.handleCreatePost.bind(this);
+    this.handlePostsListClick = this.handlePostsListClick.bind(this);
   }
 
   async mounted() {
@@ -70,6 +71,13 @@ export default class PostsPage extends Component {
         body: newPostBody,
         userId: store.getState().user.id || 1
       });
+
+      // Generate unique ID for client-side created posts
+      // Find max ID in current posts and increment by 1
+      const maxId = this.state.posts.length > 0 
+        ? Math.max(...this.state.posts.map(p => p.id))
+        : 0;
+      newPost.id = maxId + 1;
 
       // Add to local state (server won't persist it, but we show it)
       this.setState({
@@ -129,6 +137,26 @@ export default class PostsPage extends Component {
     }
   }
 
+  /**
+   * Event delegation handler - single handler for all post actions
+   * Demonstrates event delegation pattern (requirement #22)
+   * Instead of individual onclick handlers on each delete button,
+   * we use one handler on the parent container that checks event.target
+   */
+  handlePostsListClick(e) {
+    // Find the button that was clicked (support event bubbling)
+    const deleteButton = e.target.closest('[data-action="delete"]');
+    
+    if (deleteButton) {
+      e.preventDefault();
+      const postId = parseInt(deleteButton.dataset.postId, 10);
+      
+      if (postId) {
+        this.handleDeletePost(postId);
+      }
+    }
+  }
+
   render() {
     const { posts, loading, error, creating } = this.state;
     const user = store.getState().user;
@@ -149,20 +177,20 @@ export default class PostsPage extends Component {
               placeholder: 'Post title',
               name: 'title',
               id: 'post-title',
-              disabled: creating
+              ...(creating && { disabled: true })
             }),
             h('textarea', {
               class: 'form-textarea',
               placeholder: 'Post body',
               name: 'body',
               id: 'post-body',
-              disabled: creating,
-              rows: 3
+              rows: 3,
+              ...(creating && { disabled: true })
             }),
             h('button', {
               type: 'submit',
               class: 'btn-create-post',
-              disabled: creating
+              ...(creating && { disabled: true })
             }, creating ? 'Creating...' : 'Create Post')
           ])
         ]) : h('div', { class: 'auth-notice' }, [
@@ -177,8 +205,12 @@ export default class PostsPage extends Component {
         // Error state
         error ? h('div', { class: 'error-message' }, error) : null,
 
-        // Posts list
-        !loading && !error ? h('div', { class: 'posts-list' }, 
+        // Posts list with EVENT DELEGATION
+        // Single click handler on parent instead of handlers on each button
+        !loading && !error ? h('div', { 
+          class: 'posts-list',
+          onclick: this.handlePostsListClick  // ← Event delegation: one handler for all posts
+        }, 
           posts.map(post => 
             h('div', { class: 'post-card', key: post.id }, [
               h('h3', { class: 'post-title' }, post.title),
@@ -187,7 +219,8 @@ export default class PostsPage extends Component {
                 h('span', { class: 'post-id' }, `ID: ${post.id}`),
                 user.isAuth ? h('button', {
                   class: 'btn-delete',
-                  onclick: () => this.handleDeletePost(post.id)
+                  'data-action': 'delete',      // ← data attribute for delegation
+                  'data-post-id': post.id       // ← post ID in data attribute
                 }, 'Delete') : null
               ])
             ])

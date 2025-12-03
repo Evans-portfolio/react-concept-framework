@@ -2,13 +2,20 @@
   "name": "@framework/core",
   "version": "1.0.0",
   "description": "Core framework package",
+  "type": "module",
   "main": "dist/index.js",
   "module": "src/core/index.js",
   "scripts": {
     "build": "rollup -c",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ../node_modules/jest/bin/jest.js",
+    "test:watch": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ../node_modules/jest/bin/jest.js --watch",
+    "test:coverage": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ../node_modules/jest/bin/jest.js --coverage"
   },
   "keywords": ["framework"],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  }
 }
