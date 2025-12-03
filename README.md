@@ -41,14 +41,38 @@ document.getElementById('app').appendChild(counter.mount());
 
 ## 📱 Live Demo
 
-Check out the complete demo application with Todo, Login, and Posts features:
+Check out the complete demo application with Todo, Login, and Posts features.
+
+### Run Demo Server
 
 ```bash
+# Navigate to project directory
 cd Gitea/frontend-framework
+
+# Make script executable (first time only)
+chmod +x run-demo.sh
+
+# Start the demo server
+./run-demo.sh demo
+# or simply
 ./run-demo.sh
 ```
 
 Then open: http://localhost:8000/example/public/
+
+### Install Dependencies
+
+```bash
+# Install all dependencies for framework and example
+./run-demo.sh install
+```
+
+### Run Tests
+
+```bash
+# Run all framework unit tests
+./run-demo.sh test
+```
 
 **Demo Features:**
 - ✅ Todo app with localStorage persistence
