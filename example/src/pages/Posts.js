@@ -1,4 +1,4 @@
-// Posts page with JSONPlaceholder API
+// Posts page with DummyJSON API
 import { h } from '../../../framework/src/dom/index.js';
 import { Component } from '../../../framework/src/core/index.js';
 import { http } from '../../../framework/src/http/index.js';
@@ -14,13 +14,9 @@ export default class PostsPage extends Component {
       posts: [],
       loading: true,
       error: null,
-      newPostTitle: '',
-      newPostBody: '',
       creating: false
     };
 
-    this.handleTitleInput = this.handleTitleInput.bind(this);
-    this.handleBodyInput = this.handleBodyInput.bind(this);
     this.handleCreatePost = this.handleCreatePost.bind(this);
   }
 
@@ -32,10 +28,10 @@ export default class PostsPage extends Component {
     try {
       this.setState({ loading: true, error: null });
       
-      // Load first 10 posts from JSONPlaceholder
-      const posts = await http.get('https://jsonplaceholder.typicode.com/posts?_limit=10');
+      // Load first 10 posts from DummyJSON
+      const response = await http.get('https://dummyjson.com/posts?limit=10');
       
-      this.setState({ posts, loading: false });
+      this.setState({ posts: response.posts, loading: false });
     } catch (error) {
       this.setState({ 
         error: 'Failed to load posts', 
@@ -48,18 +44,14 @@ export default class PostsPage extends Component {
     }
   }
 
-  handleTitleInput(e) {
-    this.setState({ newPostTitle: e.target.value });
-  }
-
-  handleBodyInput(e) {
-    this.setState({ newPostBody: e.target.value });
-  }
-
   async handleCreatePost(e) {
     e.preventDefault();
     
-    const { newPostTitle, newPostBody } = this.state;
+    // Get values from form elements instead of state
+    const titleInput = e.target.querySelector('#post-title');
+    const bodyInput = e.target.querySelector('#post-body');
+    const newPostTitle = titleInput.value;
+    const newPostBody = bodyInput.value;
 
     if (!newPostTitle.trim() || !newPostBody.trim()) {
       emit('notification', { 
@@ -72,20 +64,22 @@ export default class PostsPage extends Component {
     try {
       this.setState({ creating: true });
 
-      // Create post via JSONPlaceholder API
-      const newPost = await http.post('https://jsonplaceholder.typicode.com/posts', {
+      // Create post via DummyJSON API
+      const newPost = await http.post('https://dummyjson.com/posts/add', {
         title: newPostTitle,
         body: newPostBody,
-        userId: 1
+        userId: store.getState().user.id || 1
       });
 
       // Add to local state (server won't persist it, but we show it)
       this.setState({
         posts: [newPost, ...this.state.posts],
-        newPostTitle: '',
-        newPostBody: '',
         creating: false
       });
+
+      // Clear form
+      titleInput.value = '';
+      bodyInput.value = '';
 
       emit('notification', { 
         type: 'success', 
@@ -103,8 +97,14 @@ export default class PostsPage extends Component {
 
   async handleDeletePost(postId) {
     try {
-      // Delete via API
-      await http.delete(`https://jsonplaceholder.typicode.com/posts/${postId}`);
+      // Check if post is from server (ID <= 251) or local (ID > 251)
+      const isServerPost = postId <= 251;
+      
+      if (isServerPost) {
+        // Try to delete via DummyJSON API (only works for real posts)
+        await http.delete(`https://dummyjson.com/posts/${postId}`);
+      }
+      // For local posts (created by user), just remove from state without API call
 
       // Remove from local state
       this.setState({
@@ -117,22 +117,27 @@ export default class PostsPage extends Component {
       });
 
     } catch (error) {
+      // If API delete fails, still remove from local state (optimistic delete)
+      this.setState({
+        posts: this.state.posts.filter(p => p.id !== postId)
+      });
+      
       emit('notification', { 
-        type: 'error', 
-        message: 'Failed to delete post' 
+        type: 'success', 
+        message: 'Post deleted locally' 
       });
     }
   }
 
   render() {
-    const { posts, loading, error, newPostTitle, newPostBody, creating } = this.state;
+    const { posts, loading, error, creating } = this.state;
     const user = store.getState().user;
 
     return h('div', { class: 'posts-page' }, [
       Header(),
       h('div', { class: 'posts-container' }, [
         h('h2', {}, 'Posts'),
-        h('p', { class: 'posts-hint' }, 'Loaded from JSONPlaceholder API'),
+        h('p', { class: 'posts-hint' }, 'Loaded from DummyJSON API'),
 
         // Create post form
         user.isAuth ? h('div', { class: 'create-post-card' }, [
@@ -142,16 +147,16 @@ export default class PostsPage extends Component {
               type: 'text',
               class: 'form-input',
               placeholder: 'Post title',
-              value: newPostTitle,
-              disabled: creating,
-              oninput: this.handleTitleInput
+              name: 'title',
+              id: 'post-title',
+              disabled: creating
             }),
             h('textarea', {
               class: 'form-textarea',
               placeholder: 'Post body',
-              value: newPostBody,
+              name: 'body',
+              id: 'post-body',
               disabled: creating,
-              oninput: this.handleBodyInput,
               rows: 3
             }),
             h('button', {

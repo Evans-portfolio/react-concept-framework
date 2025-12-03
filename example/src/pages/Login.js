@@ -4,7 +4,6 @@ import { Component } from '../../../framework/src/core/index.js';
 import { http } from '../../../framework/src/http/index.js';
 import { emit } from '../../../framework/src/events/index.js';
 import { navigate } from '../../../framework/src/router/index.js';
-import { isEmail } from '../../../framework/src/utils/validator.js';
 import { store } from '../store.js';
 import Header from '../components/Header.js';
 
@@ -12,19 +11,19 @@ export default class LoginPage extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      email: '',
+      username: '',
       password: '',
       loading: false,
       error: null
     };
 
-    this.handleEmailInput = this.handleEmailInput.bind(this);
+    this.handleUsernameInput = this.handleUsernameInput.bind(this);
     this.handlePasswordInput = this.handlePasswordInput.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleEmailInput(e) {
-    this.setState({ email: e.target.value, error: null });
+  handleUsernameInput(e) {
+    this.setState({ username: e.target.value, error: null });
   }
 
   handlePasswordInput(e) {
@@ -34,18 +33,18 @@ export default class LoginPage extends Component {
   async handleSubmit(e) {
     e.preventDefault();
     
-    const { email, password } = this.state;
+    const { username, password } = this.state;
 
     // Validation
-    if (!email || !password) {
+    if (!username || !password) {
       this.setState({ error: 'Please fill in all fields' });
       emit('notification', { type: 'error', message: 'Please fill in all fields' });
       return;
     }
 
-    if (!isEmail(email)) {
-      this.setState({ error: 'Invalid email format' });
-      emit('notification', { type: 'error', message: 'Invalid email format' });
+    if (username.length < 3) {
+      this.setState({ error: 'Username must be at least 3 characters' });
+      emit('notification', { type: 'error', message: 'Username must be at least 3 characters' });
       return;
     }
 
@@ -55,20 +54,20 @@ export default class LoginPage extends Component {
       return;
     }
 
-    // Login via ReqRes.in API
+    // Login via DummyJSON API
     this.setState({ loading: true, error: null });
 
     try {
-      const response = await http.post('https://reqres.in/api/login', {
-        email,
+      const response = await http.post('https://dummyjson.com/auth/login', {
+        username,
         password
       });
 
       // Success - save user to global store
       store.setState({
         user: {
-          email,
-          name: email.split('@')[0],
+          email: response.email,
+          name: response.firstName + ' ' + response.lastName,
           token: response.token,
           isAuth: true
         }
@@ -88,32 +87,32 @@ export default class LoginPage extends Component {
       });
       emit('notification', { 
         type: 'error', 
-        message: 'Login failed. Try: eve.holt@reqres.in / cityslicka' 
+        message: 'Login failed. Try: emilys / emilyspass' 
       });
     }
   }
 
   render() {
-    const { email, password, loading, error } = this.state;
+    const { username, password, loading, error } = this.state;
 
     return h('div', { class: 'login-page' }, [
       Header(),
       h('div', { class: 'login-container' }, [
         h('div', { class: 'login-card' }, [
           h('h2', {}, 'Login'),
-          h('p', { class: 'login-hint' }, 'Demo credentials: eve.holt@reqres.in / cityslicka'),
+          h('p', { class: 'login-hint' }, 'Demo credentials: emilys / emilyspass'),
           
           h('form', { onsubmit: this.handleSubmit }, [
             h('div', { class: 'form-group' }, [
-              h('label', { for: 'email' }, 'Email'),
+              h('label', { for: 'username' }, 'Username'),
               h('input', {
-                id: 'email',
-                type: 'email',
+                id: 'username',
+                type: 'text',
                 class: 'form-input',
-                placeholder: 'eve.holt@reqres.in',
-                value: email,
+                placeholder: 'emilys',
+                value: username,
                 disabled: loading,
-                oninput: this.handleEmailInput
+                oninput: this.handleUsernameInput
               })
             ]),
 

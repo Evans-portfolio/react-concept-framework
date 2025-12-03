@@ -327,16 +327,16 @@ class LoginPage extends Component {
     this.setState({ loading: true, error: null }); // Clear previous errors
 
     try {
-      const response = await http.post('https://reqres.in/api/login', {
-        email: this.state.email,
+      const response = await http.post('https://dummyjson.com/auth/login', {
+        username: this.state.username,
         password: this.state.password
       });
 
       // Save to store - update global auth state
       store.setState({
         user: {
-          email: this.state.email,
-          token: response.token,
+          username: this.state.username,
+          token: response.accessToken,
           isAuthenticated: true
         }
       });
@@ -560,15 +560,13 @@ class PostsList extends Component {
 
 ## Authentication
 
-### Adding Headers
+### Using DummyJSON
 
-The HTTP client automatically adds the API key for ReqRes.in requests:
+DummyJSON is a free REST API with no authentication required. You can use it directly without API keys:
 
 ```javascript
-// Framework handles this internally
-if (url.includes('reqres.in')) {
-  headers['x-api-key'] = 'reqres-free-v1';
-}
+// No API key needed - just use the endpoints directly
+const posts = await http.get('https://dummyjson.com/posts');
 ```
 
 ### Custom Headers
@@ -622,10 +620,10 @@ export default class PostsPage extends Component {
 
   async loadPosts() {
     try {
-      const posts = await http.get(
-        'https://jsonplaceholder.typicode.com/posts?_limit=10'
+      const response = await http.get(
+        'https://dummyjson.com/posts?limit=10'
       );
-      this.setState({ posts, loading: false });
+      this.setState({ posts: response.posts, loading: false });
     } catch (error) {
       console.error('Failed to load posts:', error);
       this.setState({ loading: false });
@@ -642,7 +640,7 @@ export default class PostsPage extends Component {
 
     try {
       const newPost = await http.post(
-        'https://jsonplaceholder.typicode.com/posts',
+        'https://dummyjson.com/posts/add',
         {
           title: newPostTitle,
           body: newPostBody,
@@ -665,7 +663,7 @@ export default class PostsPage extends Component {
   async deletePost(id) {
     try {
       await http.delete(
-        `https://jsonplaceholder.typicode.com/posts/${id}`
+        `https://dummyjson.com/posts/${id}`
       );
 
       this.setState({

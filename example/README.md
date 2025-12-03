@@ -62,13 +62,13 @@ http://localhost:8000
 #### Login (HTTP + Validation + Global State)
 1. Go to `/login`
 2. Use test credentials:
-   - Email: `eve.holt@reqres.in`
-   - Password: `cityslicka`
+   - Username: `emilys`
+   - Password: `emilyspass`
 3. Watch Toast notifications
 4. Successful login → redirects to Posts
 
 #### Posts (HTTP CRUD + Lifecycle)
-1. After login, view posts from JSONPlaceholder API
+1. After login, view posts from DummyJSON API
 2. Create a new post (auth required)
 3. Delete posts
 4. Logout → can't create posts anymore
@@ -115,16 +115,17 @@ const isAuth = store.getState().user.isAuth;
 
 ```javascript
 // POST request
-const response = await http.post('https://reqres.in/api/login', {
-  email,
+const response = await http.post('https://dummyjson.com/auth/login', {
+  username,
   password
 });
 
 // GET request
-const posts = await http.get('https://jsonplaceholder.typicode.com/posts?_limit=10');
+const response = await http.get('https://dummyjson.com/posts?limit=10');
+const posts = response.posts;
 
 // DELETE request
-await http.delete(`https://jsonplaceholder.typicode.com/posts/${id}`);
+await http.delete(`https://dummyjson.com/posts/${id}`);
 ```
 
 ### 4. Custom Events (Toast notifications)
@@ -193,18 +194,15 @@ async loadPosts() {
 
 ## 📊 Public APIs Used
 
-### ReqRes.in (Login)
-- **Endpoint:** https://reqres.in/api/login
-- **Method:** POST
-- **Test Account:** eve.holt@reqres.in / cityslicka
-- **Why?** Real authentication without backend
-
-### JSONPlaceholder (Posts)
-- **Endpoints:** 
-  - GET /posts?_limit=10
-  - POST /posts
+### DummyJSON (Authentication & Posts)
+- **Auth Endpoint:** https://dummyjson.com/auth/login
+- **Posts Endpoints:** 
+  - GET /posts?limit=10
+  - POST /posts/add
   - DELETE /posts/:id
-- **Why?** Test CRUD operations without backend
+- **Test Account:** emilys / emilyspass
+- **Docs:** https://dummyjson.com/docs
+- **Why?** Free unified API for both authentication and CRUD operations, no rate limits
 
 ## 🐛 Bugs Fixed During Development
 
@@ -225,20 +223,18 @@ async loadPosts() {
 
 ## 📈 Coverage
 
-| Framework Feature | Demonstrated In | Lines of Code |
-|-------------------|-----------------|---------------|
-| Virtual DOM | All components | ~1500 |
-| Components | All pages | ~800 |
-| State (local) | Todo, Posts | ~300 |
-| State (global) | Login, Posts | ~50 |
-| Router | All pages | ~200 |
-| HTTP client | Login, Posts | ~100 |
-| Events (DOM) | All components | ~200 |
-| Events (custom) | Login → Toast | ~80 |
-| Validators | Login | ~20 |
-| Reconciliation | Todo, Posts | ~150 |
-
-**Total: ~3400 lines of example code**
+| Framework Feature | Demonstrated In |
+|-------------------|-----------------|
+| Virtual DOM | All components |
+| Components | All pages |
+| State (local) | Todo, Posts |
+| State (global) | Login, Posts |
+| Router | All pages |
+| HTTP client | Login, Posts |
+| Events (DOM) | All components |
+| Events (custom) | Login → Toast |
+| Validators | Login |
+| Reconciliation | Todo, Posts |
 
 ## 💡 Learning Points
 

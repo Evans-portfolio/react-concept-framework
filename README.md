@@ -52,8 +52,8 @@ Then open: http://localhost:8000/example/public/
 
 **Demo Features:**
 - ✅ Todo app with localStorage persistence
-- 🔐 Login with ReqRes.in API integration
-- 📝 Posts CRUD with JSONPlaceholder API
+- 🔐 Login with DummyJSON API integration
+- 📝 Posts CRUD with DummyJSON API
 - 🔔 Toast notifications
 - 🎨 Modern UI with gradients
 
@@ -90,7 +90,7 @@ frontend-framework/
 │   │   └── validation/    # Form validators
 │   └── docs/              # Comprehensive documentation (5000+ lines)
 │
-├── example/               # Demo application (~1000 lines)
+├── example/               # Demo application
 │   ├── public/           # Static files, index.html
 │   └── src/
 │       ├── index.js      # App entry point
@@ -213,7 +213,7 @@ See the `/example` directory for a complete application demonstrating:
 - Component composition
 - Global and local state
 - Client-side routing
-- API integration (ReqRes.in, JSONPlaceholder)
+- API integration (DummyJSON)
 - Form validation
 - Custom events
 - LocalStorage persistence

@@ -28,13 +28,13 @@ export default class AboutPage extends Component {
           h('li', {}, '✅ Form validation (validateEmail)'),
           h('li', {}, '✅ Global state (store.setState)'),
           h('li', {}, '✅ Custom events (emit/on for notifications)'),
-          h('li', {}, '✅ External API integration (ReqRes.in)')
+          h('li', {}, '✅ External API integration (DummyJSON)')
         ]),
         h('p', { class: 'demo-hint' }, [
           h('strong', {}, 'Test credentials: '),
-          h('code', {}, 'eve.holt@reqres.in'),
+          h('code', {}, 'emilys'),
           h('span', {}, ' / '),
-          h('code', {}, 'cityslicka')
+          h('code', {}, 'emilyspass')
         ]),
 
         h('h3', {}, '📝 Posts Page'),
@@ -45,7 +45,7 @@ export default class AboutPage extends Component {
           h('li', {}, '✅ Loading and error states'),
           h('li', {}, '✅ Conditional rendering based on auth'),
           h('li', {}, '✅ Optimistic UI updates'),
-          h('li', {}, '✅ JSONPlaceholder API integration')
+          h('li', {}, '✅ DummyJSON API integration')
         ]),
 
         h('h3', {}, '🔔 Toast Notifications'),
