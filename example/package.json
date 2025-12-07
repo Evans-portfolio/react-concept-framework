@@ -4,9 +4,8 @@
   "description": "Example application using the framework",
   "main": "src/index.js",
   "scripts": {
-    "dev": "webpack serve --mode development",
-    "build": "webpack --mode production",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "python3 -m http.server 8000",
+    "start": "python3 -m http.server 8000"
   },
   "keywords": ["framework", "example"],
   "author": "",

@@ -95,6 +95,14 @@ function run_tests() {
 function start_demo() {
   echo "🚀 Starting Framework Demo Server..."
   echo ""
+  
+  # Check if dependencies are installed (npm workspaces use root node_modules)
+  if [ ! -d "node_modules" ]; then
+    echo "⚠️  Dependencies not installed."
+    echo "Run './run-demo.sh install' first."
+    exit 1
+  fi
+  
   echo "📁 Server directory: project root"
   echo "🌐 Open in browser:"
   echo "   http://localhost:8000/example/public/"
