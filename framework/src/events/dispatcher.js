@@ -108,20 +108,18 @@ export class EventDispatcher {
     const eventType = event.type;
     let target = event.target;
 
-    // Walk up the DOM tree
+    // Check for direct listeners (no selector)
+    const directKey = this.getListenerKey(eventType, null);
+    const directListeners = this.listeners.get(directKey);
+
+    if (directListeners) {
+      directListeners.forEach(({ handler, options }) => {
+        this.executeHandler(handler, event, target, options);
+      });
+    }
+
+    // Walk up the DOM tree for delegated listeners
     while (target && target !== this.root) {
-      // Check for direct listeners (no selector)
-      const directKey = this.getListenerKey(eventType, null);
-      const directListeners = this.listeners.get(directKey);
-
-      if (directListeners) {
-        directListeners.forEach(({ handler, options }) => {
-          if (this.shouldHandle(target, null)) {
-            this.executeHandler(handler, event, target, options);
-          }
-        });
-      }
-
       // Check for delegated listeners (with selectors)
       this.listeners.forEach((listeners, key) => {
         if (key.startsWith(`${eventType}:`)) {

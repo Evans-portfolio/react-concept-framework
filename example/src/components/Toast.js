@@ -53,23 +53,23 @@ export class Toast extends Component {
   render() {
     const { notifications } = this.state;
 
-    return h('div', { className: 'toast-container' },
+    return h('div', { class: 'toast-container' },
       ...notifications.map(notif =>
         h('div', {
           key: notif.id,
-          className: `toast toast-${notif.type}`,
-          onClick: () => this.removeNotification(notif.id)
-        },
-          h('span', { className: 'toast-icon' }, this.getIcon(notif.type)),
-          h('span', { className: 'toast-message' }, notif.message),
+          class: `toast toast-${notif.type}`,
+          onclick: () => this.removeNotification(notif.id)
+        }, [
+          h('span', { class: 'toast-icon' }, this.getIcon(notif.type)),
+          h('span', { class: 'toast-message' }, notif.message),
           h('button', {
-            className: 'toast-close',
-            onClick: (e) => {
+            class: 'toast-close',
+            onclick: (e) => {
               e.stopPropagation();
               this.removeNotification(notif.id);
             }
           }, '×')
-        )
+        ])
       )
     );
   }
