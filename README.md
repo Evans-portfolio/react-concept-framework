@@ -2,6 +2,195 @@
 
 A lightweight, React-like JavaScript framework built from scratch with Virtual DOM, component system, routing, and state management.
 
+## 🏗️ How It Works - Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                            USER                                  │
+│                    (Clicks, types text)                          │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    1. EVENT HANDLING                             │
+│   onClick/onInput → EventDispatcher → Component handler          │
+│                                                                   │
+│   Example: <button onclick={() => this.increment()}>             │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    2. STATE UPDATE                               │
+│              this.setState({ count: count + 1 })                 │
+│                                                                   │
+│   • Updates this.state (immutably)                               │
+│   • If global state exists → store.setState()                    │
+│   • Triggers re-render                                           │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    3. LIFECYCLE HOOKS                            │
+│                                                                   │
+│   beforeUpdate(oldProps, newProps) ← called before render        │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    4. RENDER                                     │
+│              const newVNode = this.render()                      │
+│                                                                   │
+│   render() {                                                     │
+│     return h('div', {}, [                                        │
+│       h('h1', {}, `Count: ${this.state.count}`),                 │
+│       h('button', { onclick: ... }, '+')                         │
+│     ])                                                           │
+│   }                                                              │
+│                                                                   │
+│   ✅ Creates new Virtual DOM (JavaScript object)                 │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    5. VIRTUAL DOM DIFF                           │
+│              patch(parent, oldVNode, newVNode)                   │
+│                                                                   │
+│   Compares old and new Virtual DOM:                              │
+│   • What changed?                                                │
+│   • What was added?                                              │
+│   • What was removed?                                            │
+│                                                                   │
+│   oldVNode: { tag: 'h1', children: ['Count: 5'] }               │
+│   newVNode: { tag: 'h1', children: ['Count: 6'] }               │
+│   diff: text changed from '5' to '6'                             │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    6. PATCH REAL DOM                             │
+│            Apply minimal changes                                 │
+│                                                                   │
+│   ❌ DON'T recreate entire element                               │
+│   ✅ Only update text: textContent = 'Count: 6'                  │
+│                                                                   │
+│   Result: browser does minimal work (fast!)                      │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    7. LIFECYCLE HOOKS                            │
+│                                                                   │
+│   updated(oldProps, newProps) ← called after DOM update          │
+└────────────────────────────┬────────────────────────────────────┘
+                             │
+                             ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                         BROWSER                                  │
+│                   (Shows updated UI)                             │
+└─────────────────────────────────────────────────────────────────┘
+
+
+═══════════════════════════════════════════════════════════════════
+                    ADDITIONAL SYSTEMS
+═══════════════════════════════════════════════════════════════════
+
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   ROUTER        │     │  HTTP CLIENT    │     │  STORE (State)  │
+├─────────────────┤     ├─────────────────┤     ├─────────────────┤
+│ URL changed?    │     │ await http.get()│     │ Global state    │
+│   ↓             │     │       ↓         │     │                 │
+│ Find route      │     │ fetch(url)      │     │ store.setState()│
+│   ↓             │     │       ↓         │     │       ↓         │
+│ Load Page       │     │ response.json() │     │ Notify all      │
+│   ↓             │     │       ↓         │     │ subscribers     │
+│ Render          │     │ setState(data)  │     │                 │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+
+┌─────────────────┐     ┌─────────────────┐
+│  EVENT SYSTEM   │     │   VALIDATORS    │
+├─────────────────┤     ├─────────────────┤
+│ emit('notify')  │     │ validateEmail() │
+│       ↓         │     │       ↓         │
+│ All listeners   │     │ regex.test()    │
+│ receive event   │     │       ↓         │
+│       ↓         │     │ true/false      │
+│ Toast shown     │     │                 │
+└─────────────────┘     └─────────────────┘
+```
+
+## 📋 Complete Cycle Example (Todo App)
+
+```
+1. User clicks "Add Todo"
+   ↓
+2. onClick calls addTodo()
+   ↓
+3. addTodo() does:
+   const newTodo = { id: uid(), text: input, completed: false }
+   this.setState({ todos: [...this.state.todos, newTodo] })
+   ↓
+4. setState() triggers render()
+   ↓
+5. render() creates new Virtual DOM:
+   h('ul', {},
+     todos.map(todo => h('li', { key: todo.id }, todo.text))
+   )
+   ↓
+6. patch() compares old/new Virtual DOM
+   • Old: 5 <li> elements
+   • New: 6 <li> elements
+   • Diff: 1 element added
+   ↓
+7. DOM operation:
+   ul.appendChild(new li)  ← Only 1 operation!
+   ↓
+8. Browser shows new Todo in list
+   ↓
+9. localStorage.setItem('todos', JSON.stringify(todos))  ← Persist
+```
+
+## 🎯 Simplified Flow
+
+```
+              ┌──────────────────────────┐
+              │     User clicks          │
+              └───────────┬──────────────┘
+                          │
+                          ▼
+              ┌──────────────────────────┐
+              │  onClick handler         │
+              │  this.setState(new data) │
+              └───────────┬──────────────┘
+                          │
+                          ▼
+              ┌──────────────────────────┐
+              │  render()                │
+              │  creates Virtual DOM     │
+              └───────────┬──────────────┘
+                          │
+                          ▼
+              ┌──────────────────────────┐
+              │  patch()                 │
+              │  compares old/new        │
+              └───────────┬──────────────┘
+                          │
+                          ▼
+              ┌──────────────────────────┐
+              │  Update Real DOM         │
+              │  (minimal changes)       │
+              └───────────┬──────────────┘
+                          │
+                          ▼
+              ┌──────────────────────────┐
+              │   Browser displays       │
+              │   updated UI             │
+              └──────────────────────────┘
+```
+
+**Key Idea:**
+- **Without Virtual DOM**: every change → full page re-render (slow 🐌)
+- **With Virtual DOM**: changes → comparison → only necessary updates (fast ⚡)
+
 ## ✨ Features
 
 - 🎯 **Component-Based Architecture** - Build reusable UI components with lifecycle hooks
