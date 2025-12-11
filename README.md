@@ -408,8 +408,22 @@ python3 -m http.server 8000
 - **Virtual DOM Reconciliation**: ~10x faster than full re-render
   - Key-based: ~5ms for 100 items
   - Without keys: ~50ms for 100 items
-- **Bundle Size**: ~15KB gzipped (including all modules)
+- **Bundle Size**: ✅ **11.71KB gzipped** (validated - better than claimed 15KB!)
 - **Zero Dependencies**: Pure ES6+ JavaScript
+
+**See [PERFORMANCE.md](PERFORMANCE.md) for validated benchmark results and detailed measurements.**
+
+### Run Performance Benchmarks
+
+```bash
+# Bundle size analysis (Node.js)
+cd framework
+npm run benchmark
+
+# DOM performance benchmarks (Browser)
+npm run benchmark:browser
+# Open http://localhost:8000/framework/benchmarks/
+```
 
 ## 🧪 Testing
 
@@ -439,7 +453,7 @@ See the `/example` directory for a complete application demonstrating:
 
 ## 🤝 Contributing
 
-This is an educational project built to understand how modern frameworks work internally.
+This is an educational project built to understand how modern frameworks work internally. @devansvane @elainio0 & @jafa_san
 
 ## 📄 License
 
