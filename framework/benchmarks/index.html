@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Framework Performance Benchmarks</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      padding: 40px;
+    }
+
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 2.5em;
+    }
+
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1.1em;
+    }
+
+    .benchmark-section {
+      margin: 30px 0;
+      padding: 25px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .benchmark-section h2 {
+      color: #667eea;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin: 10px 10px 10px 0;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .results {
+      margin-top: 20px;
+      padding: 20px;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .result-item {
+      margin: 15px 0;
+      padding: 15px;
+      background: #f8f9fa;
+      border-radius: 4px;
+    }
+
+    .result-item h3 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 1.2em;
+    }
+
+    .metric {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 10px;
+      margin: 8px 0;
+      font-family: 'Courier New', monospace;
+    }
+
+    .metric-label {
+      font-weight: 600;
+      color: #666;
+    }
+
+    .metric-value {
+      color: #333;
+    }
+
+    .speedup {
+      display: inline-block;
+      background: #4caf50;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+
+    .speedup.negative {
+      background: #f44336;
+    }
+
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .status {
+      padding: 15px;
+      border-radius: 6px;
+      margin: 15px 0;
+      font-weight: 500;
+    }
+
+    .status.running {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+
+    .status.complete {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    .status.error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    th {
+      background: #667eea;
+      color: white;
+      font-weight: 600;
+    }
+
+    tr:hover {
+      background: #f5f5f5;
+    }
+
+    .export-section {
+      margin-top: 30px;
+      padding: 20px;
+      background: #e8f5e9;
+      border-radius: 8px;
+      border-left: 4px solid #4caf50;
+    }
+
+    pre {
+      background: #263238;
+      color: #aed581;
+      padding: 20px;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Framework Performance Benchmarks</h1>
+    <p class="subtitle">Validate performance claims with real measurements</p>
+
+    <div class="benchmark-section">
+      <h2>⚡ Quick Start</h2>
+      <button id="runAll">Run All Benchmarks</button>
+      <button id="clearResults">Clear Results</button>
+      <button id="exportResults">Export as JSON</button>
+      <div id="overallStatus"></div>
+    </div>
+
+    <div class="benchmark-section">
+      <h2>📊 Individual Benchmarks</h2>
+      <button id="runKeyed">1. Keyed vs Non-Keyed Reconciliation</button>
+      <button id="runVdom">2. Virtual DOM vs Direct DOM</button>
+      <button id="runMount">3. Component Mounting</button>
+      <button id="runState">4. State Updates</button>
+      <button id="runLarge">5. Large List Rendering</button>
+    </div>
+
+    <div id="resultsContainer"></div>
+
+    <div class="export-section" id="exportSection" style="display: none;">
+      <h3>📋 Export Results</h3>
+      <p style="margin-bottom: 10px;">Copy the JSON below to save your benchmark results:</p>
+      <pre id="jsonOutput"></pre>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      runAllBenchmarks,
+      benchmarkKeyedReconciliation,
+      benchmarkVirtualDomVsDirectDom,
+      benchmarkComponentMounting,
+      benchmarkStateUpdates,
+      benchmarkLargeListRendering
+    } from './dom-performance.bench.js';
+
+    const resultsContainer = document.getElementById('resultsContainer');
+    const overallStatus = document.getElementById('overallStatus');
+    const exportSection = document.getElementById('exportSection');
+    const jsonOutput = document.getElementById('jsonOutput');
+
+    let allResults = null;
+
+    function showStatus(message, type = 'running') {
+      overallStatus.innerHTML = `<div class="status ${type}">${message}</div>`;
+    }
+
+    function clearResults() {
+      resultsContainer.innerHTML = '';
+      exportSection.style.display = 'none';
+      overallStatus.innerHTML = '';
+      allResults = null;
+    }
+
+    function formatMetrics(metrics) {
+      return `
+        <div class="metric">
+          <span class="metric-label">Average:</span>
+          <span class="metric-value">${metrics.avg} ms</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Median:</span>
+          <span class="metric-value">${metrics.median} ms</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Min:</span>
+          <span class="metric-value">${metrics.min} ms</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Max:</span>
+          <span class="metric-value">${metrics.max} ms</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Iterations:</span>
+          <span class="metric-value">${metrics.iterations}</span>
+        </div>
+      `;
+    }
+
+    function displayKeyedResults(results) {
+      let html = '<div class="results"><h3>Keyed vs Non-Keyed Reconciliation Results</h3>';
+
+      Object.entries(results).forEach(([size, data]) => {
+        html += `
+          <div class="result-item">
+            <h3>${size}</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Metric</th>
+                  <th>With Keys</th>
+                  <th>Without Keys</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Average Time</td>
+                  <td>${data.withKeys.avg} ms</td>
+                  <td>${data.withoutKeys.avg} ms</td>
+                </tr>
+                <tr>
+                  <td>Median Time</td>
+                  <td>${data.withKeys.median} ms</td>
+                  <td>${data.withoutKeys.median} ms</td>
+                </tr>
+                <tr>
+                  <td><strong>Speedup</strong></td>
+                  <td colspan="2">
+                    <strong>${data.speedup}x faster with keys</strong>
+                    <span class="speedup ${data.speedup >= 2 ? '' : 'negative'}">${data.speedup >= 2 ? '✅ Claim Validated' : '⚠️ Below Expected'}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      resultsContainer.innerHTML += html;
+    }
+
+    function displayVdomResults(results) {
+      const speedupClass = results.speedup >= 1 ? '' : 'negative';
+      const validation = results.speedup >= 1 ? '✅ Virtual DOM is faster' : '⚠️ Direct DOM is faster';
+
+      const html = `
+        <div class="results">
+          <h3>Virtual DOM vs Direct DOM Results</h3>
+          <div class="result-item">
+            <table>
+              <thead>
+                <tr>
+                  <th>Method</th>
+                  <th>Avg (ms)</th>
+                  <th>Median (ms)</th>
+                  <th>Min (ms)</th>
+                  <th>Max (ms)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Virtual DOM</td>
+                  <td>${results.virtualDom.avg}</td>
+                  <td>${results.virtualDom.median}</td>
+                  <td>${results.virtualDom.min}</td>
+                  <td>${results.virtualDom.max}</td>
+                </tr>
+                <tr>
+                  <td>Direct DOM</td>
+                  <td>${results.directDom.avg}</td>
+                  <td>${results.directDom.median}</td>
+                  <td>${results.directDom.min}</td>
+                  <td>${results.directDom.max}</td>
+                </tr>
+                <tr>
+                  <td colspan="5">
+                    <strong>Result: ${results.speedup}x</strong>
+                    <span class="speedup ${speedupClass}">${validation}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+
+      resultsContainer.innerHTML += html;
+    }
+
+    function displaySimpleResults(title, results) {
+      const html = `
+        <div class="results">
+          <h3>${title}</h3>
+          <div class="result-item">
+            ${formatMetrics(results)}
+          </div>
+        </div>
+      `;
+      resultsContainer.innerHTML += html;
+    }
+
+    function displayLargeListResults(results) {
+      let html = '<div class="results"><h3>Large List Rendering Results</h3>';
+
+      Object.entries(results).forEach(([size, metrics]) => {
+        html += `
+          <div class="result-item">
+            <h3>${size}</h3>
+            ${formatMetrics(metrics)}
+          </div>
+        `;
+      });
+
+      html += '</div>';
+      resultsContainer.innerHTML += html;
+    }
+
+    // Event listeners
+    document.getElementById('runAll').addEventListener('click', async () => {
+      clearResults();
+      showStatus('🔄 Running all benchmarks... This may take a minute.', 'running');
+
+      try {
+        allResults = runAllBenchmarks();
+
+        displayKeyedResults(allResults.benchmarks.keyedReconciliation);
+        displayVdomResults(allResults.benchmarks.virtualDomVsDirectDom);
+        displaySimpleResults('Component Mounting Performance', allResults.benchmarks.componentMounting);
+        displaySimpleResults('State Update Performance', allResults.benchmarks.stateUpdates);
+        displayLargeListResults(allResults.benchmarks.largeListRendering);
+
+        showStatus('✅ All benchmarks completed successfully!', 'complete');
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
+        console.error(error);
+      }
+    });
+
+    document.getElementById('runKeyed').addEventListener('click', () => {
+      showStatus('🔄 Running keyed reconciliation benchmark...', 'running');
+      try {
+        const results = benchmarkKeyedReconciliation();
+        displayKeyedResults(results);
+        showStatus('✅ Keyed reconciliation benchmark completed!', 'complete');
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
+      }
+    });
+
+    document.getElementById('runVdom').addEventListener('click', () => {
+      showStatus('🔄 Running Virtual DOM benchmark...', 'running');
+      try {
+        const results = benchmarkVirtualDomVsDirectDom();
+        displayVdomResults(results);
+        showStatus('✅ Virtual DOM benchmark completed!', 'complete');
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
+      }
+    });
+
+    document.getElementById('runMount').addEventListener('click', () => {
+      showStatus('🔄 Running component mounting benchmark...', 'running');
+      try {
+        const results = benchmarkComponentMounting();
+        displaySimpleResults('Component Mounting Performance', results);
+        showStatus('✅ Component mounting benchmark completed!', 'complete');
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
+      }
+    });
+
+    document.getElementById('runState').addEventListener('click', () => {
+      showStatus('🔄 Running state update benchmark...', 'running');
+      try {
+        const results = benchmarkStateUpdates();
+        displaySimpleResults('State Update Performance', results);
+        showStatus('✅ State update benchmark completed!', 'complete');
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
+      }
+    });
+
+    document.getElementById('runLarge').addEventListener('click', () => {
+      showStatus('🔄 Running large list rendering benchmark...', 'running');
+      try {
+        const results = benchmarkLargeListRendering();
+        displayLargeListResults(results);
+        showStatus('✅ Large list rendering benchmark completed!', 'complete');
+      } catch (error) {
+        showStatus(`❌ Error: ${error.message}`, 'error');
+      }
+    });
+
+    document.getElementById('clearResults').addEventListener('click', clearResults);
+
+    document.getElementById('exportResults').addEventListener('click', () => {
+      if (!allResults) {
+        alert('Please run benchmarks first!');
+        return;
+      }
+
+      exportSection.style.display = 'block';
+      jsonOutput.textContent = JSON.stringify(allResults, null, 2);
+      exportSection.scrollIntoView({ behavior: 'smooth' });
+    });
+  </script>
+</body>
+</html>

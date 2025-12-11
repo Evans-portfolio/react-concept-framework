@@ -9,7 +9,9 @@
     "build": "rollup -c",
     "test": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ../node_modules/jest/bin/jest.js",
     "test:watch": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ../node_modules/jest/bin/jest.js --watch",
-    "test:coverage": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ../node_modules/jest/bin/jest.js --coverage"
+    "test:coverage": "node --experimental-vm-modules --no-warnings=ExperimentalWarning ../node_modules/jest/bin/jest.js --coverage",
+    "benchmark": "node benchmarks/run-benchmarks.js",
+    "benchmark:browser": "echo 'Starting server... Open http://localhost:8000/framework/benchmarks/ in your browser' && python3 -m http.server 8000"
   },
   "keywords": ["framework"],
   "author": "",

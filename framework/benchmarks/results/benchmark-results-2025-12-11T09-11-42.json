@@ -1,0 +1,197 @@
+{
+  "timestamp": "2025-12-11T09:11:42.164Z",
+  "nodeVersion": "v22.20.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "bundleSizes": {
+    "moduleSizes": {
+      "Core": {
+        "totalSize": 18581,
+        "totalSizeFormatted": "18.15 KB",
+        "gzippedSize": 4432,
+        "gzippedSizeFormatted": "4.33 KB",
+        "files": [
+          {
+            "name": "component.js",
+            "size": 15751,
+            "sizeFormatted": "15.38 KB"
+          },
+          {
+            "name": "index.js",
+            "size": 990,
+            "sizeFormatted": "990 Bytes"
+          },
+          {
+            "name": "lifecycle.js",
+            "size": 1840,
+            "sizeFormatted": "1.8 KB"
+          }
+        ],
+        "compressionRatio": 4.19
+      },
+      "DOM": {
+        "totalSize": 8932,
+        "totalSizeFormatted": "8.72 KB",
+        "gzippedSize": 2435,
+        "gzippedSizeFormatted": "2.38 KB",
+        "files": [
+          {
+            "name": "diff.js",
+            "size": 4181,
+            "sizeFormatted": "4.08 KB"
+          },
+          {
+            "name": "element.js",
+            "size": 4540,
+            "sizeFormatted": "4.43 KB"
+          },
+          {
+            "name": "index.js",
+            "size": 211,
+            "sizeFormatted": "211 Bytes"
+          }
+        ],
+        "compressionRatio": 3.67
+      },
+      "State": {
+        "totalSize": 1445,
+        "totalSizeFormatted": "1.41 KB",
+        "gzippedSize": 550,
+        "gzippedSizeFormatted": "550 Bytes",
+        "files": [
+          {
+            "name": "index.js",
+            "size": 167,
+            "sizeFormatted": "167 Bytes"
+          },
+          {
+            "name": "reactive.js",
+            "size": 712,
+            "sizeFormatted": "712 Bytes"
+          },
+          {
+            "name": "store.js",
+            "size": 566,
+            "sizeFormatted": "566 Bytes"
+          }
+        ],
+        "compressionRatio": 2.63
+      },
+      "Router": {
+        "totalSize": 3691,
+        "totalSizeFormatted": "3.6 KB",
+        "gzippedSize": 1451,
+        "gzippedSizeFormatted": "1.42 KB",
+        "files": [
+          {
+            "name": "index.js",
+            "size": 822,
+            "sizeFormatted": "822 Bytes"
+          },
+          {
+            "name": "route.js",
+            "size": 992,
+            "sizeFormatted": "992 Bytes"
+          },
+          {
+            "name": "router.js",
+            "size": 1877,
+            "sizeFormatted": "1.83 KB"
+          }
+        ],
+        "compressionRatio": 2.54
+      },
+      "HTTP": {
+        "totalSize": 1758,
+        "totalSizeFormatted": "1.72 KB",
+        "gzippedSize": 780,
+        "gzippedSizeFormatted": "780 Bytes",
+        "files": [
+          {
+            "name": "client.js",
+            "size": 1659,
+            "sizeFormatted": "1.62 KB"
+          },
+          {
+            "name": "index.js",
+            "size": 99,
+            "sizeFormatted": "99 Bytes"
+          }
+        ],
+        "compressionRatio": 2.25
+      },
+      "Events": {
+        "totalSize": 5676,
+        "totalSizeFormatted": "5.54 KB",
+        "gzippedSize": 1556,
+        "gzippedSizeFormatted": "1.52 KB",
+        "files": [
+          {
+            "name": "dispatcher.js",
+            "size": 5501,
+            "sizeFormatted": "5.37 KB"
+          },
+          {
+            "name": "index.js",
+            "size": 175,
+            "sizeFormatted": "175 Bytes"
+          }
+        ],
+        "compressionRatio": 3.65
+      },
+      "Utils": {
+        "totalSize": 1735,
+        "totalSizeFormatted": "1.69 KB",
+        "gzippedSize": 784,
+        "gzippedSizeFormatted": "784 Bytes",
+        "files": [
+          {
+            "name": "helpers.js",
+            "size": 1087,
+            "sizeFormatted": "1.06 KB"
+          },
+          {
+            "name": "index.js",
+            "size": 182,
+            "sizeFormatted": "182 Bytes"
+          },
+          {
+            "name": "validator.js",
+            "size": 466,
+            "sizeFormatted": "466 Bytes"
+          }
+        ],
+        "compressionRatio": 2.21
+      },
+      "Total Framework": {
+        "totalSize": 41818,
+        "totalSizeFormatted": "40.84 KB",
+        "gzippedSize": 11988,
+        "gzippedSizeFormatted": "11.71 KB",
+        "compressionRatio": 3.49
+      }
+    },
+    "comparison": {
+      "Our Framework": {
+        "minified": "40.84 KB",
+        "gzipped": "11.71 KB"
+      },
+      "React (production)": {
+        "minified": "~130 KB",
+        "gzipped": "~42 KB"
+      },
+      "Vue 3": {
+        "minified": "~100 KB",
+        "gzipped": "~34 KB"
+      },
+      "Preact": {
+        "minified": "~10 KB",
+        "gzipped": "~4 KB"
+      },
+      "Svelte (runtime)": {
+        "minified": "~5 KB",
+        "gzipped": "~2 KB"
+      }
+    }
+  }
+}
