@@ -17,13 +17,13 @@ document.addEventListener('DOMContentLoaded', () => {
     toast.mount(toastContainer);
   }
 
-  // Настроить маршруты
+  // Define application routes
   router.on('/', HomePage);
   router.on('/about', AboutPage);
   router.on('/login', LoginPage);
   router.on('/posts', PostsPage);
-  router.on('*', NotFoundPage); // Fallback для 404
+  router.on('*', NotFoundPage); // Fallback for 404
 
-  // Запустить роутер
+  // Start the router
   router.start('#app');
 });
